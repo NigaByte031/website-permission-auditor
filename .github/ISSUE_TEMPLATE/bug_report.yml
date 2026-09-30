@@ -1,0 +1,70 @@
+name: Bug report
+description: Something in the popup, the badge or the audit is wrong
+title: '[Bug] '
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please do not paste personal browsing data —
+        the name of a public test site is enough to reproduce most issues.
+
+  - type: input
+    id: environment
+    attributes:
+      label: Chrome version and OS
+      placeholder: e.g. Chrome 121 on Windows 11
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Extension version
+      description: Shown in the popup footer (e.g. v1.0.0).
+      placeholder: v1.0.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where does it happen?
+      options:
+        - Popup — permission rows
+        - Popup — filter bar
+        - Popup — collapsing cards
+        - Popup — summary tally / badge text
+        - Toolbar badge
+        - Revoke / reset action
+        - Not-auditable page notice
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open https://example.com
+        2. Click the toolbar icon
+        3. …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+    validations:
+      required: true
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output (optional)
+      description: Errors from the popup inspector (right-click the popup → Inspect).
+      render: text
+    validations:
+      required: false

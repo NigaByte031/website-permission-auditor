@@ -1,0 +1,24 @@
+{
+  "name": "website-permission-auditor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Privacy-focused Chrome extension (MV3) that audits the active site's permissions: camera, microphone, location, notifications, clipboard, cookies and host access.",
+  "license": "MIT",
+  "author": "Mohammad Yazdani",
+  "keywords": [
+    "chrome-extension",
+    "manifest-v3",
+    "privacy",
+    "permissions",
+    "content-settings",
+    "security"
+  ],
+  "scripts": {
+    "test": "node scripts/validate.mjs",
+    "validate": "node scripts/validate.mjs",
+    "icons": "node icons/generate-icons.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

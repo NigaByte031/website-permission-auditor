@@ -1,35 +1,78 @@
-# Website Permission Auditor (Manifest V3)
+# Website Permission Auditor
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Manifest V3](https://img.shields.io/badge/Manifest-V3-4285F4?logo=googlechrome&logoColor=white)](#compatibility)
+[![Chrome 104+](https://img.shields.io/badge/Chrome-104%2B-4285F4?logo=googlechrome&logoColor=white)](#compatibility)
+[![Network requests: none](https://img.shields.io/badge/network%20requests-none-2ea043)](PRIVACY.md)
+[![Dependencies: none](https://img.shields.io/badge/dependencies-none-2ea043)](package.json)
 
-A privacy-focused Chrome extension that audits **the site in the active tab**
-and reports which capabilities it has been granted: camera, microphone,
-geolocation, notifications, clipboard, cookies, pop-ups, JavaScript, images,
-sound and automatic downloads — plus the host permissions this extension
-itself holds for the site.
+A privacy-focused Chrome extension (Manifest V3) that audits **the site in the
+active tab** and reports which capabilities it has been granted: camera,
+microphone, geolocation, notifications, clipboard, cookies, pop-ups,
+JavaScript, images, sound and automatic downloads — plus the host permissions
+this extension itself holds for the site.
 
-Everything runs locally. The popup makes **no network requests** (favicons are
-resolved through Chrome's local `favicon` API endpoint) and stores nothing.
+Everything runs locally. The popup makes **no network requests** and stores
+nothing but one UI preference.
 
-## Project layout
+<!-- prettier-ignore -->
+| | |
+|---|---|
+| **Get it** | Load the folder unpacked — see [Install](#install) |
+| **Requires** | Chrome/Edge 104+ (Manifest V3) |
+| **Footprint** | No dependencies, no build step, no remote code |
+| **Docs** | [Privacy](PRIVACY.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) |
 
-```
-manifest.json            MV3 manifest (permissions, action, service worker)
-popup.html               Semantic popup markup (templates for cards/rows)
-popup.css                Card-based UI, CSS variables, automatic dark mode
-popup.js                 Audit logic + rendering + live row filter (ES2022+)
-background.js            Service worker: live toolbar badge for the active tab
-icons/
-  generate-icons.mjs     Dev-time icon generator (node icons/generate-icons.mjs;
-                         add --all for an alternate orange "attention" artwork)
-  icon16.png icon48.png icon128.png   Generated toolbar/store icons
-```
+## Table of contents
 
-## Loading the extension
+- [Features](#features)
+- [Install](#install)
+- [How the audit works](#how-the-audit-works)
+- [The "chrome.siteSettings" question](#the-chromesitesettings-question)
+- [Revoke/reset semantics](#revokereset-semantics)
+- [Manifest permissions and why](#manifest-permissions-and-why)
+- [Privacy](#privacy)
+- [Compatibility](#compatibility)
+- [Project layout](#project-layout)
+- [Development](#development)
+- [Manual test checklist](#manual-test-checklist)
+- [Notes and limits](#notes-and-limits)
+- [License](#license)
 
-1. (Only if icons are missing) run `node icons/generate-icons.mjs`.
-2. Open `chrome://extensions`, enable **Developer mode**.
+## Features
+
+- **Effective, not guessed.** Every row is queried through
+  `chrome.contentSettings`, so it reflects browser defaults and enterprise
+  policy even when no rule was ever set for the site.
+- **Honest states.** Allowed / Ask (default) / Blocked / Allowed (this
+  session) shown as tinted chips with a leading glyph, so status never depends
+  on colour alone.
+- **One-click revoke.** Rows that differ from Chrome's default offer a
+  *Revoke* / *Reset to default* action scoped to that origin.
+- **At-a-glance tally.** The header summarises the audit as
+  *granted / blocked / default* counts next to the summary badge.
+- **Scannable at scale.** A live filter narrows rows as you type, hides empty
+  cards and shows `matched/total` counts.
+- **Remembers your layout.** Collapsible category cards persist their
+  collapsed/expanded state in `chrome.storage.local`.
+- **Quiet background signal.** The toolbar badge flags sites with granted
+  permissions (green `1`) or restricted ones (red `!`) without opening the
+  popup.
+- **No install scare.** No `host_permissions`, so Chrome shows no "read and
+  change all your data" warning.
+- **Light and dark.** The whole UI is themed with CSS custom properties and
+  follows the OS via `prefers-color-scheme`.
+
+## Install
+
+There is no build step and no release artifact required:
+
+1. (Only if `icons/` is empty) run `node icons/generate-icons.mjs`.
+2. Open `chrome://extensions` and enable **Developer mode**.
 3. Click **Load unpacked** and select this folder.
+
+After editing `manifest.json`, press **Reload** on the extension card; edits to
+`popup.html/css/js` just need the popup reopened.
 
 ## How the audit works
 
@@ -57,6 +100,11 @@ icons/
   hidden, matching cards expand for the duration of the search, and the count
   pill switches to `matched/total`. The query is popup-local and never
   persisted.
+- The header carries a live tally of the audit — granted / blocked / default
+  — and every row shows a tinted status chip with a leading glyph
+  (✓ allowed, ? ask, ✕ blocked) so state reads without relying on color
+  alone. A shimmer skeleton covers the first paint, and the header gains a
+  shadow once content scrolls beneath it.
 
 ## The "chrome.siteSettings" question
 
@@ -80,7 +128,7 @@ unlocked by the `"contentSettings"` manifest permission. This extension
 therefore uses `chrome.contentSettings` and keeps a runtime guard so it
 degrades gracefully (error banner, not a crash) if the API is ever missing.
 
-### Revoke/reset semantics
+## Revoke/reset semantics
 
 `ContentSetting.clear()` only clears **all** rules of a type for every site —
 it has no per-origin form — so "Revoke" here writes Chrome's documented
@@ -104,6 +152,58 @@ appears when the current setting differs from that default.
 No `host_permissions` are declared, so installing triggers no "read and
 change all your data" warning. `"minimum_chrome_version": "104"` reflects the
 `favicon` API requirement.
+
+## Privacy
+
+The extension sends nothing anywhere and reads no page content. The only
+persisted value is the collapsed-card map in `chrome.storage.local`.
+
+- Full statement: [PRIVACY.md](PRIVACY.md)
+- Enforced by tooling: `npm test` fails if runtime code calls `fetch`,
+  `XMLHttpRequest`, `WebSocket`, `EventSource`, `sendBeacon` or
+  `importScripts`.
+
+## Compatibility
+
+| Browser | Status |
+|---|---|
+| Chrome / Chromium 104+ | ✅ Supported |
+| Edge 104+ | ✅ Expected to work (same extension APIs) |
+| Chrome < 104 | ❌ `favicon` API unavailable |
+| Firefox | ❌ Not targeted (uses `chrome.*` MV3 APIs) |
+
+## Project layout
+
+```
+manifest.json            MV3 manifest (permissions, action, service worker)
+popup.html               Semantic popup markup (templates for cards/rows)
+popup.css                Card-based UI, CSS variables, automatic dark mode
+popup.js                 Audit logic + rendering + live row filter (ES2022+)
+background.js            Service worker: live toolbar badge for the active tab
+icons/
+  generate-icons.mjs     Dev-time icon generator (add --all for an alternate
+                         orange "attention" artwork)
+  icon16.png icon48.png icon128.png   Generated toolbar/store icons
+scripts/
+  validate.mjs           Dependency-free checks run by `npm test` and CI
+.github/
+  workflows/ci.yml       Validate on every push and pull request
+  workflows/release.yml  Zip the extension and publish a release on v* tags
+```
+
+## Development
+
+```bash
+npm test     # validate manifest, JS syntax, popup assets and the offline guarantee
+npm run icons  # regenerate the toolbar/store icons
+```
+
+`npm test` needs no installation: there are no dependencies, and
+`scripts/validate.mjs` uses only Node's standard library. Releases are cut by
+pushing a tag that matches `manifest.json` (`v1.0.0`); the release workflow
+validates, packages a store-ready zip and attaches it to the GitHub release.
+
+Conventions and PR expectations live in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Manual test checklist
 
@@ -132,6 +232,15 @@ change all your data" warning. `"minimum_chrome_version": "104"` reflects the
 - The badge inspects the four key types (camera, mic, location,
   notifications) to keep service-worker wake-ups cheap; the popup always
   audits the full list.
+- The audit reports what the browser stores per origin. It cannot see what a
+  site does with a permission after you grant it in a page dialog, and it does
+  not observe third-party iframes individually.
+
+## Contributing
+
+Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md)
+and the [Code of Conduct](CODE_OF_CONDUCT.md). Security reports should go
+through the private channel described in [SECURITY.md](SECURITY.md).
 
 ## License
 

@@ -1,5 +1,7 @@
-# Local preview/dev tooling (preview harness)
-tools/preview/
+# Local preview tooling: ignore only runtime artifacts, not the harness itself
+# (the harness files stay visible so they can be edited and reviewed).
+tools/preview/*.log
+tools/preview/*.log.err
 
 # OS junk
 Thumbs.db

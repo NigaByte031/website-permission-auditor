@@ -1,0 +1,49 @@
+name: Feature request
+description: Suggest a capability or a UI improvement
+title: '[Feature] '
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This extension deliberately makes **no network requests** and requests
+        no host permissions. Please keep proposals inside those constraints.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the situation, not the implementation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behaviour
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the extension?
+      options:
+        - Audit coverage (types of permissions)
+        - Popup presentation
+        - Toolbar badge
+        - Documentation
+        - Developer tooling
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Constraints
+      options:
+        - label: This keeps the extension offline (no fetch/XHR/WebSocket).
+          required: true
+        - label: This does not require new host permissions.
+          required: true

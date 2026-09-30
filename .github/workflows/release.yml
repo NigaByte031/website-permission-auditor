@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Package and publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate
+        run: npm test
+
+      - name: Check the tag matches the manifest version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          node -e '
+            const version = JSON.parse(require("fs").readFileSync("manifest.json", "utf8")).version;
+            const tag = process.env.GITHUB_REF_NAME.replace(/^v/, "");
+            if (version !== tag) {
+              console.error(`manifest version ${version} does not match tag v${tag}`);
+              process.exit(1);
+            }
+            console.log(`tag v${tag} matches manifest version ${version}`);
+          '
+
+      - name: Build the upload archive
+        run: |
+          VERSION=$(node -p 'require("./manifest.json").version')
+          NAME="website-permission-auditor-v${VERSION}"
+          zip -r "${NAME}.zip" \
+            manifest.json popup.html popup.css popup.js background.js \
+            icons/icon16.png icons/icon48.png icons/icon128.png
+          unzip -l "${NAME}.zip"
+
+      - name: Publish the release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: website-permission-auditor-*.zip
+          generate_release_notes: true
+
+      - name: Keep the archive as a build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-package
+          path: website-permission-auditor-*.zip
