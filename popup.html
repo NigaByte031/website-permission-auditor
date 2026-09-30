@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Website Permission Auditor</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <!-- ===== Header: origin being audited + summary pill ===== -->
+    <header class="header">
+      <div class="header__row">
+        <img id="favicon" class="header__favicon" alt="" src="" hidden />
+        <div class="header__text">
+          <span id="siteName" class="header__site">Loading&hellip;</span>
+          <span id="siteUrl" class="header__url" hidden></span>
+        </div>
+        <span id="summaryBadge" class="badge" hidden></span>
+      </div>
+      <p id="summaryText" class="header__summary"></p>
+    </header>
+
+    <main id="content">
+      <!-- "All clear" state -->
+      <section id="allClear" class="all-clear" hidden>
+        <span class="all-clear__icon" aria-hidden="true">🛡️</span>
+        <strong class="all-clear__title">All clear</strong>
+        <span class="all-clear__sub"
+          >No special permissions granted to this site.</span
+        >
+      </section>
+
+      <!-- Permission categories are rendered here by popup.js -->
+      <div id="categories"></div>
+
+      <!-- Shown only for chrome://, extension pages, etc. -->
+      <section id="notAuditable" class="notice notice--warn" hidden>
+        <strong>Nothing to audit here</strong>
+        <span id="notAuditableReason"
+          >This page is a browser or extension page, so it has no website
+          permissions.</span
+        >
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span class="footer__hint">Audits only this tab's site settings.</span>
+      <a id="chromeSettingsLink" class="footer__link" href="#">Open Chrome site settings ↗</a>
+    </footer>
+
+    <template id="tpl-category">
+      <section class="card">
+        <button
+          class="card__head"
+          type="button"
+          aria-expanded="true"
+          aria-controls=""
+        >
+          <span class="card__icon" aria-hidden="true"></span>
+          <h2 class="card__title"></h2>
+          <span class="card__count" aria-hidden="true"></span>
+          <span class="card__chevron" aria-hidden="true">
+            <svg viewBox="0 0 16 16" width="14" height="14" focusable="false">
+              <path
+                d="M4 6l4 4 4-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+        </button>
+        <div class="card__list-wrap">
+          <ul class="card__list" id=""></ul>
+        </div>
+      </section>
+    </template>
+
+    <template id="tpl-item">
+      <li class="perm">
+        <span class="perm__glyph" aria-hidden="true"></span>
+        <div class="perm__body">
+          <div class="perm__row">
+            <span class="perm__name"></span>
+            <span class="perm__value"></span>
+          </div>
+          <span class="perm__detail"></span>
+          <button class="perm__revoke" type="button" hidden></button>
+        </div>
+      </li>
+    </template>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

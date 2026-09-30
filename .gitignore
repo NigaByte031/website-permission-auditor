@@ -1,0 +1,9 @@
+# Local preview/dev tooling (preview harness)
+tools/preview/
+
+# OS junk
+Thumbs.db
+.DS_Store
+
+# Node (icon generator dev usage)
+node_modules/
