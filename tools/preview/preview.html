@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Preview — Website Permission Auditor popup</title>
+    <style>
+      html[data-color-mode='light'] {
+        color-scheme: light;
+      }
+      html[data-color-mode='dark'] {
+        color-scheme: dark;
+      }
+      .preview-stage {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 16px;
+        background: #dfe3e8;
+        padding: 24px;
+        font: 13px/1.45 system-ui, sans-serif;
+      }
+      .preview-note {
+        max-width: 440px;
+        text-align: center;
+        color: #444b52;
+      }
+      .preview-frame {
+        width: 380px;
+        height: 620px;
+        border: 0;
+        border-radius: 14px;
+        box-shadow: 0 10px 40px rgb(0 0 0 / 0.25);
+        background: #fff;
+      }
+      .preview-controls {
+        display: flex;
+        gap: 8px;
+      }
+      .scheme-btn {
+        padding: 6px 14px;
+        border-radius: 999px;
+        border: 1px solid #b8bfc7;
+        background: #fff;
+        color: #2a3038;
+        font: 600 12px/1 system-ui, sans-serif;
+        cursor: pointer;
+      }
+      .scheme-btn:hover {
+        border-color: #7d858d;
+      }
+      @media (prefers-color-scheme: dark) {
+        .preview-stage { background: #14161a; }
+        .preview-note { color: #aab2ba; }
+        .scheme-btn {
+          background: #25282c;
+          border-color: #3a3f45;
+          color: #e8eaed;
+        }
+        .scheme-btn:hover { border-color: #5c6670; }
+      }
+      /* Keep the active state last so it wins over the dark-mode styles. */
+      .scheme-btn--active {
+        background: #0b57d0;
+        border-color: #0b57d0;
+        color: #fff;
+      }
+      /* When a mode is forced, theme the harness itself to match. */
+      html[data-color-mode='light'] .preview-stage { background: #dfe3e8; }
+      html[data-color-mode='light'] .preview-note { color: #444b52; }
+      html[data-color-mode='dark'] .preview-stage { background: #14161a; }
+      html[data-color-mode='dark'] .preview-note { color: #aab2ba; }
+    </style>
+  </head>
+  <body>
+    <div class="preview-stage">
+      <div class="preview-controls">
+        <button type="button" id="schemeAuto" class="scheme-btn">Auto</button>
+        <button type="button" id="schemeLight" class="scheme-btn">☀ Light</button>
+        <button type="button" id="schemeDark" class="scheme-btn">🌙 Dark</button>
+      </div>
+      <p class="preview-note">
+        Live preview of the <strong>Website Permission Auditor</strong> popup
+        (mock site: <code>https://example.com</code>). The real
+        <code>popup.html/css/js</code> run inside the frame with a mocked
+        <code>chrome.*</code> API; refresh to pick up edits. Use
+        <strong>Auto</strong> to follow the OS setting again.
+      </p>
+      <iframe class="preview-frame" id="frame" title="Extension popup preview"></iframe>
+    </div>
+    <script>
+      // ---- Color-scheme switcher -------------------------------------------
+      // Forcing `color-scheme` on the root element makes embedded documents
+      // (the popup iframe) resolve `prefers-color-scheme` accordingly, so the
+      // popup's automatic dark mode can be exercised without OS settings.
+      const MODE_KEY = 'preview.colorMode';
+      const buttons = {
+        auto: document.getElementById('schemeAuto'),
+        light: document.getElementById('schemeLight'),
+        dark: document.getElementById('schemeDark'),
+      };
+
+      function applyMode(mode) {
+        if (mode === 'auto') {
+          delete document.documentElement.dataset.colorMode;
+        } else {
+          document.documentElement.dataset.colorMode = mode;
+        }
+        for (const [name, btn] of Object.entries(buttons)) {
+          btn.classList.toggle('scheme-btn--active', name === mode);
+        }
+        try {
+          localStorage.setItem(MODE_KEY, mode);
+        } catch {
+          /* storage may be unavailable - non-fatal */
+        }
+      }
+
+      for (const [name, btn] of Object.entries(buttons)) {
+        btn.addEventListener('click', () => applyMode(name));
+      }
+
+      let saved = 'auto';
+      try {
+        saved = localStorage.getItem(MODE_KEY) ?? 'auto';
+      } catch {
+        /* fall through to auto */
+      }
+      if (saved !== 'auto' && saved !== 'light' && saved !== 'dark') saved = 'auto';
+      applyMode(saved);
+
+      /**
+       * Load the real popup.html into the iframe, injecting the chrome mock
+       * (chrome-mock.js) before popup.js so the audit runs against it.
+       */
+      async function boot() {
+        const res = await fetch('/popup.html');
+        if (!res.ok) {
+          document.querySelector('.preview-note').textContent =
+            'Failed to load /popup.html from the preview server (' + res.status + ').';
+          return;
+        }
+        const html = await res.text();
+        // <base> makes the popup's relative asset URLs resolve against the
+        // server root, since the iframe document itself is about:blank.
+        const patched = html
+          .replace('<head>', '<head>\n    <base href="/" />')
+          .replace(
+            '<script src="popup.js"></' + 'script>',
+            '<script src="/chrome-mock.js"></' + 'script>\n    <script src="popup.js"></' + 'script>'
+          );
+        const doc = document.getElementById('frame').contentDocument;
+        doc.open();
+        doc.write(patched);
+        doc.close();
+      }
+
+      boot();
+    </script>
+  </body>
+</html>
