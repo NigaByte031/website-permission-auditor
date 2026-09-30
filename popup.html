@@ -23,6 +23,54 @@
         </span>
 
         <span id="summaryBadge" class="badge" hidden></span>
+
+        <!-- Theme preference: System / Light / Dark. Wired + persisted by
+             popup.js, which resolves the choice onto <html data-theme>. -->
+        <div
+          id="themeToggle"
+          class="theme-toggle"
+          role="group"
+          aria-label="Color theme"
+        >
+          <button
+            class="theme-toggle__btn"
+            type="button"
+            data-theme-value="system"
+            aria-pressed="true"
+            title="Follow system theme"
+            aria-label="Follow system theme"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <rect x="2.8" y="4.2" width="18.4" height="12.6" rx="2.6" />
+              <path d="M9 20.4h6M12 16.8v3.6" />
+            </svg>
+          </button>
+          <button
+            class="theme-toggle__btn"
+            type="button"
+            data-theme-value="light"
+            aria-pressed="false"
+            title="Light theme"
+            aria-label="Light theme"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="4.3" />
+              <path d="M12 2.6v2.3M12 19.1v2.3M2.6 12h2.3M19.1 12h2.3M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4 17 7M7 17l-1.6 1.6" />
+            </svg>
+          </button>
+          <button
+            class="theme-toggle__btn"
+            type="button"
+            data-theme-value="dark"
+            aria-pressed="false"
+            title="Dark theme"
+            aria-label="Dark theme"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="M20.4 14.1A8.5 8.5 0 0 1 9.9 3.6a8.5 8.5 0 1 0 10.5 10.5Z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Proportional bar: granted / blocked / on-ask (popup.js sizes it) -->
@@ -101,6 +149,81 @@
           hidden
         >
           ✕
+        </button>
+      </div>
+
+      <!-- One-click site presets: bulk-apply a permission profile across the
+           audited content settings below. The whole batch is recorded as a
+           single undoable entry. Buttons are built from PRESETS in popup.js. -->
+      <section
+        class="presets"
+        id="presets"
+        role="group"
+        aria-label="Site permission presets"
+        hidden
+      >
+        <span class="presets__title">Apply a profile</span>
+        <div class="presets__row" id="presetsRow"></div>
+
+        <!-- Confirmation panel: lists the exact rows a preset would change
+             before anything is written. Built by popup.js. -->
+        <div
+          class="preset-preview"
+          id="presetPreview"
+          role="region"
+          aria-label="Preset preview"
+          aria-live="polite"
+          tabindex="-1"
+          hidden
+        ></div>
+
+        <!-- Custom preset editor: name + a per-permission target, saved to
+             chrome.storage.local and rendered alongside the built-ins.
+             Built and wired by popup.js. -->
+        <div
+          class="preset-editor"
+          id="presetEditor"
+          role="region"
+          aria-label="Custom preset editor"
+          tabindex="-1"
+          hidden
+        >
+          <label class="preset-editor__field">
+            <span class="preset-editor__field-label">Preset name</span>
+            <input
+              id="presetName"
+              class="preset-editor__input"
+              type="text"
+              maxlength="24"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="My profile"
+            />
+          </label>
+          <ul class="preset-editor__list" id="presetEditorList"></ul>
+          <div class="preset-editor__actions">
+            <button class="preset-editor__save" id="presetSaveBtn" type="button">
+              Save preset
+            </button>
+            <button
+              class="preset-editor__cancel"
+              id="presetCancelBtn"
+              type="button"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Site-wide reset + one-step undo of the last change (popup.js) -->
+      <div class="actions-bar" id="actionsBar" hidden>
+        <div class="undo" id="undoBar" role="status" hidden>
+          <span class="undo__text" id="undoText"></span>
+          <button class="undo__btn" id="undoBtn" type="button">Undo</button>
+        </div>
+        <button class="reset-site" id="resetSiteBtn" type="button">
+          Reset this site
         </button>
       </div>
 

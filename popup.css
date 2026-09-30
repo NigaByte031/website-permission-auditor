@@ -1,113 +1,131 @@
 /**
- * Website Permission Auditor - popup stylesheet (2026 "instrument panel").
+ * Website Permission Auditor - popup stylesheet (2026 "quiet instrument").
  *
  * Design language
  * ---------------
+ *   - One distinctive palette: a deep jade accent over cool sage neutrals.
+ *     Deliberately moving away from the generic indigo/violet aurora so the
+ *     extension has a calm, trustworthy, product-specific identity.
  *   - Layered surfaces (bg / surface / surface-2 / surface-3). Depth comes
- *     from soft, wide, low-alpha shadows rather than heavy borders.
- *   - One signature accent: an indigo -> violet -> cyan aurora used in the
- *     top strip, the header bloom, icon tiles and focus rings. Nothing else
- *     is allowed to be that saturated, so the accent always reads as "ours".
+ *     from soft, wide, low-alpha shadows rather than heavy borders, so the
+ *     popup reads as a single sheet of glass with cards resting on it.
  *   - A fixed status language shared by every surface: ok = allowed,
  *     warn = ask, deny = blocked, neutral = unknown. Color is never the only
  *     signal - each state also carries a glyph and a label.
  *   - Frosted-glass sticky header/footer so content scrolls underneath and
  *     the popup keeps its "window onto a longer list" feel.
- *   - Everything is themed through custom properties + prefers-color-scheme,
- *     so light/dark follow the OS (or a forced color-scheme in the preview
- *     harness). Alpha tints use rgb(var(--x-rgb) / a) instead of color-mix()
- *     so the sheet works on the extension's minimum Chrome version.
+ *   - 8px spacing rhythm and a single radius scale keep the grid consistent.
+ *   - Everything is themed through custom properties, keyed off data-theme on
+ *     <html>: the :root block is the light palette and [data-theme="dark"] is
+ *     the same set in dark. popup.js resolves the user's System/Light/Dark
+ *     choice (and the OS preference) into that attribute, so forcing a theme
+ *     never needs a second copy of the palette. Alpha tints use
+ *     rgb(var(--x-rgb) / a) instead of color-mix() so the sheet works on the
+ *     extension's minimum Chrome version.
  */
 
 :root {
-  /* Surfaces */
-  --bg: #f4f6fb;
+  /* Surfaces - cool sage neutrals */
+  --bg: #eef1ef;
   --surface: #ffffff;
-  --surface-2: #f7f8fc;
-  --surface-3: #eceff6;
-  --border: #e7eaf1;
-  --border-strong: #d2d8e3;
+  --surface-2: #f6f8f7;
+  --surface-3: #e8eeeb;
+  --border: #e1e8e4;
+  --border-strong: #cbd6d1;
 
   /* Text */
-  --text: #14161c;
-  --text-muted: #5b6373;
-  --text-faint: #8d95a4;
+  --text: #10201c;
+  --text-muted: #56655f;
+  --text-faint: #8b968f;
 
-  /* Status */
-  --ok: #0f8a54;
-  --ok-bg: #e8f7ef;
-  --ok-border: #bfe6d1;
-  --warn: #9a5b00;
-  --warn-bg: #fdf4dd;
-  --warn-border: #eedd9c;
-  --deny: #cf2536;
+  /* Status: ok = allowed, warn = ask, deny = blocked, neutral = unknown */
+  --ok: #0e8a4f;
+  --ok-bg: #e4f6ec;
+  --ok-border: #b6e2c8;
+  --warn: #a15c0a;
+  --warn-bg: #fbf0da;
+  --warn-border: #ecdaa4;
+  --deny: #cf3b47;
   --deny-bg: #fdecee;
-  --deny-border: #f5c2c8;
-  --neutral: #5b6373;
-  --neutral-bg: #eff1f6;
-  --neutral-border: #d8dde7;
+  --deny-border: #f4c2c8;
+  --neutral: #5c6a64;
+  --neutral-bg: #eef2f0;
+  --neutral-border: #d6ded9;
 
-  /* Accent + aurora */
-  --accent: #5b57f5;
-  --accent-soft: #ecebfe;
-  --accent-rgb: 91 87 245;
-  --cyan-rgb: 34 211 238;
-  --gradient: linear-gradient(110deg, #5b57f5, #8b5cf6 52%, #22d3ee);
+  /* Accent + aurora (deep jade -> aqua) */
+  --accent: #0f766e;
+  --accent-strong: #0b5d57;
+  --accent-soft: #dff1ed;
+  --accent-rgb: 15 118 110;
+  --glow-rgb: 45 212 191;
+  --gradient: linear-gradient(115deg, #0b5d57, #14b8a6 48%, #67e8f9 100%);
   /* Alpha ramp for accent-driven chrome, keeps one knob for the hue. */
   --accent-a06: rgb(var(--accent-rgb) / 0.06);
   --accent-a12: rgb(var(--accent-rgb) / 0.12);
   --accent-a20: rgb(var(--accent-rgb) / 0.2);
 
   /* Shape + elevation */
-  --radius-lg: 16px;
-  --radius: 12px;
-  --radius-sm: 9px;
-  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05), 0 1px 3px rgb(15 23 42 / 0.05);
-  --shadow-md: 0 2px 4px rgb(15 23 42 / 0.05), 0 12px 30px rgb(15 23 42 / 0.11);
-  --shadow-glass: 0 8px 24px rgb(15 23 42 / 0.09);
+  --radius-lg: 18px;
+  --radius: 13px;
+  --radius-sm: 10px;
+  --shadow-sm: 0 1px 2px rgb(16 32 28 / 0.05), 0 1px 3px rgb(16 32 28 / 0.04);
+  --shadow-md: 0 2px 4px rgb(16 32 28 / 0.05), 0 14px 32px rgb(16 32 28 / 0.1);
+  --shadow-glass: 0 10px 28px rgb(16 32 28 / 0.08);
 
   /* Translucent chrome (header/footer glass) */
-  --glass: rgb(250 251 253 / 0.78);
+  --glass: rgb(248 250 249 / 0.78);
 
   --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+
+  /* Hints the UA how to paint scrollbars and native form controls; popup.js
+     keeps this in step with the resolved theme via data-theme below. */
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0a0c11;
-    --surface: #121620;
-    --surface-2: #171c27;
-    --surface-3: #1f2533;
-    --border: #232a38;
-    --border-strong: #333c4e;
+/*
+ * Dark palette. popup.js stamps data-theme="dark" on <html> whenever dark is
+ * the resolved theme - either the user forced it or the preference is
+ * "system" and the OS prefers dark - so a single attribute selector covers
+ * both cases without a prefers-color-scheme media query duplicating the
+ * palette.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
 
-    --text: #eef0f6;
-    --text-muted: #a2abbb;
-    --text-faint: #737c8d;
+  --bg: #0a0f0d;
+  --surface: #121917;
+  --surface-2: #17211e;
+  --surface-3: #1e2a26;
+  --border: #243330;
+  --border-strong: #354541;
 
-    --ok: #3ddc97;
-    --ok-bg: #102820;
-    --ok-border: #1d4c37;
-    --warn: #f2c14e;
-    --warn-bg: #2a2109;
-    --warn-border: #534313;
-    --deny: #ff7b86;
-    --deny-bg: #301618;
-    --deny-border: #5b2b31;
-    --neutral: #a2abbb;
-    --neutral-bg: #1b2130;
-    --neutral-border: #333c4e;
+  --text: #edf3f0;
+  --text-muted: #a2b0aa;
+  --text-faint: #77857f;
 
-    --accent: #9ea2ff;
-    --accent-soft: #1c2140;
-    --accent-rgb: 158 162 255;
-    --cyan-rgb: 103 232 249;
+  --ok: #43d089;
+  --ok-bg: #10291d;
+  --ok-border: #1e4c37;
+  --warn: #ecc168;
+  --warn-bg: #2a2110;
+  --warn-border: #55431a;
+  --deny: #ff8592;
+  --deny-bg: #301619;
+  --deny-border: #5b2b31;
+  --neutral: #a2b0aa;
+  --neutral-bg: #1a231f;
+  --neutral-border: #354541;
 
-    --glass: rgb(12 15 21 / 0.76);
-    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.45);
-    --shadow-md: 0 2px 6px rgb(0 0 0 / 0.45), 0 14px 34px rgb(0 0 0 / 0.5);
-    --shadow-glass: 0 8px 24px rgb(0 0 0 / 0.5);
-  }
+  --accent: #4fd8c0;
+  --accent-strong: #6ee3ce;
+  --accent-soft: #11302b;
+  --accent-rgb: 79 216 192;
+  --glow-rgb: 103 232 249;
+
+  --glass: rgb(11 15 14 / 0.76);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.45);
+  --shadow-md: 0 2px 6px rgb(0 0 0 / 0.45), 0 16px 36px rgb(0 0 0 / 0.5);
+  --shadow-glass: 0 10px 28px rgb(0 0 0 / 0.5);
 }
 
 html {
@@ -124,13 +142,20 @@ html {
 }
 
 body {
-  width: 380px;
+  width: 392px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   margin: 0;
   padding: 0;
-  background: var(--bg);
+  /* A whisper of accent in the corner keeps the flat background from reading
+     as dead space without becoming a visible gradient. */
+  background: radial-gradient(
+      120% 60% at 100% 0,
+      rgb(var(--accent-rgb) / 0.05),
+      transparent 60%
+    ),
+    var(--bg);
   color: var(--text);
   font: 13px/1.5 system-ui, -apple-system, "Segoe UI Variable", "Segoe UI",
     Roboto, Helvetica, Arial, sans-serif;
@@ -181,15 +206,15 @@ button {
   height: 0;
 }
 
-/* ===== Header: frosted glass over an aurora bloom ===== */
+/* ===== Header: frosted glass over a jade bloom ===== */
 .header {
   position: sticky;
   top: 0;
   z-index: 1;
-  padding: 15px 16px 14px;
+  padding: 16px 18px 14px;
   background: var(--glass);
-  -webkit-backdrop-filter: blur(16px) saturate(1.6);
-  backdrop-filter: blur(16px) saturate(1.6);
+  -webkit-backdrop-filter: blur(18px) saturate(1.7);
+  backdrop-filter: blur(18px) saturate(1.7);
   border-bottom: 1px solid var(--border);
   overflow: hidden;
   isolation: isolate;
@@ -209,13 +234,13 @@ button {
   z-index: -1;
   pointer-events: none;
   background: radial-gradient(
-      58% 82% at 14% 100%,
+      58% 82% at 12% 100%,
       var(--accent-a20),
       transparent 72%
     ),
     radial-gradient(
-      52% 74% at 88% 100%,
-      rgb(var(--cyan-rgb) / 0.14),
+      52% 74% at 90% 100%,
+      rgb(var(--glow-rgb) / 0.16),
       transparent 72%
     );
 }
@@ -229,7 +254,7 @@ body.is-scrolled .header {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 12px;
   min-width: 0;
 }
 
@@ -237,11 +262,11 @@ body.is-scrolled .header {
 .identity {
   position: relative;
   flex: none;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
-  border-radius: 12px;
+  border-radius: 13px;
   overflow: hidden;
   /*
    * Tinted tile with a hairline ring - reads as an app icon rather than a
@@ -303,7 +328,7 @@ body.is-scrolled .header {
   align-items: center;
   gap: 6px;
   font-variant-numeric: tabular-nums;
-  padding: 4px 10px 4px 8px;
+  padding: 4px 11px 4px 9px;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 650;
@@ -318,7 +343,7 @@ body.is-scrolled .header {
   border-radius: 999px;
   background: currentColor;
   flex: none;
-  box-shadow: 0 0 0 3px rgb(0 0 0 / 0);
+  box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0);
 }
 
 .badge--ok {
@@ -339,13 +364,54 @@ body.is-scrolled .header {
   box-shadow: inset 0 0 0 1px var(--deny-border);
 }
 
+/* ===== Theme toggle (System / Light / Dark) ===== */
+.theme-toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.theme-toggle__btn {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--text-faint);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.theme-toggle__btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.theme-toggle__btn:hover {
+  color: var(--text);
+}
+
+.theme-toggle__btn.is-active {
+  color: var(--accent);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
 /* ===== Proportional meter (granted / blocked / on ask) ===== */
 .meter {
   position: relative;
   display: flex;
   gap: 3px;
   height: 6px;
-  margin-top: 13px;
+  margin-top: 14px;
   border-radius: 999px;
   background: var(--surface-3);
   overflow: hidden;
@@ -378,24 +444,49 @@ body.is-scrolled .header {
 .tally {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .tally__item {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: 7px 10px 8px;
+  padding: 8px 11px 9px;
   border-radius: var(--radius-sm);
   background: var(--surface-2);
   box-shadow: inset 0 0 0 1px var(--border);
+  overflow: hidden;
+}
+
+/* Left status rail: a single 3px bar tints each tile without a full wash. */
+.tally__item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: var(--neutral);
+}
+
+.tally__item--granted::before {
+  background: var(--ok);
+}
+
+.tally__item--blocked::before {
+  background: var(--deny);
+}
+
+.tally__item--default::before {
+  background: var(--warn);
 }
 
 .tally__value {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.04em;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
@@ -403,32 +494,17 @@ body.is-scrolled .header {
 .tally__label {
   font-size: 9.5px;
   font-weight: 650;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--text-faint);
-}
-
-.tally__item--granted {
-  background: linear-gradient(180deg, var(--ok-bg), var(--surface-2));
-  box-shadow: inset 0 0 0 1px var(--ok-border);
 }
 
 .tally__item--granted .tally__value {
   color: var(--ok);
 }
 
-.tally__item--blocked {
-  background: linear-gradient(180deg, var(--deny-bg), var(--surface-2));
-  box-shadow: inset 0 0 0 1px var(--deny-border);
-}
-
 .tally__item--blocked .tally__value {
   color: var(--deny);
-}
-
-.tally__item--default {
-  background: linear-gradient(180deg, var(--warn-bg), var(--surface-2));
-  box-shadow: inset 0 0 0 1px var(--warn-border);
 }
 
 .tally__item--default .tally__value {
@@ -436,8 +512,8 @@ body.is-scrolled .header {
 }
 
 .header__summary {
-  margin: 11px 0 0;
-  padding-left: 9px;
+  margin: 12px 0 0;
+  padding-left: 10px;
   border-left: 2px solid var(--accent-a20);
   color: var(--text-muted);
   font-size: 12px;
@@ -452,7 +528,18 @@ body.is-scrolled .header {
 /* ===== Main layout: pin footer to the bottom on short pages ===== */
 main {
   flex: 1;
-  padding: 14px 14px 18px;
+  padding: 16px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/*
+ * Category cards live inside a single flex column owned by #categories, so
+ * the gap between cards is defined once here rather than as margins that
+ * would double up with the search bar's spacing.
+ */
+#categories {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -462,7 +549,7 @@ main {
 .skeleton {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .skeleton__card {
@@ -516,7 +603,7 @@ main {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
+  padding: 9px 12px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -600,7 +687,8 @@ main {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
-  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .card:hover {
@@ -615,9 +703,9 @@ main {
 .card__head {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 11px 14px;
   background: transparent;
   border: 0;
   border-bottom: 1px solid var(--border);
@@ -645,18 +733,18 @@ main {
 .card__icon {
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   flex: none;
-  border-radius: 8px;
+  border-radius: 9px;
   background: var(--accent-soft);
   color: var(--accent);
   box-shadow: inset 0 0 0 1px var(--accent-a12);
 }
 
 .card__icon svg {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
 }
 
 .card__title {
@@ -664,7 +752,7 @@ main {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
   color: var(--text-muted);
   flex: 1;
   overflow: hidden;
@@ -683,7 +771,7 @@ main {
   font-variant-numeric: tabular-nums;
   color: var(--text-faint);
   background: var(--surface-3);
-  padding: 1px 7px;
+  padding: 1px 8px;
   border-radius: 999px;
   flex: none;
 }
@@ -757,15 +845,15 @@ main {
 /* ===== Individual permission rows ===== */
 .perm {
   display: flex;
-  gap: 11px;
-  padding: 11px 13px;
+  gap: 12px;
+  padding: 12px 14px;
   align-items: flex-start;
 }
 
 .perm__glyph {
   flex: none;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
   border-radius: var(--radius-sm);
@@ -814,7 +902,8 @@ main {
 }
 
 .perm__name {
-  font-weight: 600;
+  font-weight: 650;
+  font-size: 13px;
   letter-spacing: -0.01em;
 }
 
@@ -884,36 +973,46 @@ main {
 
 .perm__detail {
   display: block;
-  margin-top: 3px;
+  margin-top: 4px;
   color: var(--text-faint);
   font-size: 11px;
+  line-height: 1.45;
   text-wrap: pretty;
 }
 
-/* ===== Row actions: Enable / Disable / Reset ===== */
+/* ===== Row actions: a compact segmented control =====
+ * Enable / Disable / Reset share one recessed track, so a row reads as a
+ * single toggle instead of three loose buttons. The current state fills its
+ * own segment with the matching status tint.
+ */
 .perm__actions {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 9px;
+  gap: 2px;
+  margin-top: 10px;
+  padding: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
 }
 
 .perm__action {
-  padding: 4px 12px;
-  font-size: 11px;
+  padding: 4px 13px;
+  font-size: 10.5px;
   font-weight: 650;
+  letter-spacing: 0.01em;
   color: var(--text-muted);
   background: transparent;
-  border: 1px solid var(--border-strong);
+  border: 0;
   border-radius: 999px;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease,
-    color 0.15s ease, transform 0.1s ease;
+  transition: background-color 0.15s ease, color 0.15s ease,
+    box-shadow 0.15s ease, transform 0.1s ease;
 }
 
 .perm__action:hover:not(:disabled) {
-  background: var(--surface-3);
   color: var(--text);
+  background: var(--surface-3);
 }
 
 .perm__action:active:not(:disabled) {
@@ -924,38 +1023,31 @@ main {
   cursor: progress;
 }
 
-/* Enable: green when it is the current state, green-tinted on hover. */
-.perm__action--allow {
-  color: var(--ok);
-  border-color: var(--ok-border);
-}
-
 .perm__action--allow:hover:not(:disabled) {
-  background: var(--ok-bg);
-  border-color: var(--ok);
   color: var(--ok);
+  background: var(--ok-bg);
 }
 
 .perm__action--allow.is-active {
+  color: var(--ok);
   background: var(--ok-bg);
-  border-color: var(--ok);
-}
-
-/* Disable: red when it is the current state, red-tinted on hover. */
-.perm__action--block {
-  color: var(--deny);
-  border-color: var(--deny-border);
+  box-shadow: inset 0 0 0 1px var(--ok-border);
 }
 
 .perm__action--block:hover:not(:disabled) {
-  background: var(--deny-bg);
-  border-color: var(--deny);
   color: var(--deny);
+  background: var(--deny-bg);
 }
 
 .perm__action--block.is-active {
+  color: var(--deny);
   background: var(--deny-bg);
-  border-color: var(--deny);
+  box-shadow: inset 0 0 0 1px var(--deny-border);
+}
+
+.perm__action--reset:hover:not(:disabled) {
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 /*
@@ -966,6 +1058,577 @@ main {
   opacity: 1;
 }
 
+/* ===== Site actions: reset + undo ===== */
+.actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/*
+ * The undo pill sits on the left and grows with its message; the reset button
+ * is pushed to the right. Both auto margins absorb the gap when one is hidden.
+ */
+.undo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-right: auto;
+  padding: 3px 4px 3px 12px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-a20);
+  border-radius: 999px;
+}
+
+.undo__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.undo__btn {
+  flex: none;
+  padding: 3px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--surface);
+  background: var(--accent);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.undo__btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.undo__btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.undo__btn:disabled {
+  cursor: progress;
+}
+
+.reset-site {
+  flex: none;
+  margin-left: auto;
+  padding: 5px 13px;
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, transform 0.1s ease;
+}
+
+.reset-site:hover:not(:disabled) {
+  background: var(--surface-3);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.reset-site:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.reset-site:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ===== Site presets: one-click permission profiles =====
+ * A single card holding the profile buttons. Each button badges its intent
+ * with a status-tinted glyph (deny = lock down, accent = balanced, ok = grant
+ * camera) while staying neutral until hovered, so the bar reads as a calm
+ * control strip rather than a traffic light.
+ */
+.presets {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 12px 13px 13px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: opacity 0.15s ease;
+}
+
+.presets__title {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.presets__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.preset {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, transform 0.1s ease;
+}
+
+.preset:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.preset:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.preset:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.preset:disabled {
+  cursor: progress;
+}
+
+.preset__icon {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  color: var(--text-faint);
+  transition: color 0.15s ease;
+}
+
+.preset__icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Per-profile glyph tint: the three intents stay distinguishable at a glance. */
+.preset--lockdown .preset__icon {
+  color: var(--deny);
+}
+
+.preset--balanced .preset__icon {
+  color: var(--accent);
+}
+
+.preset--camera .preset__icon {
+  color: var(--ok);
+}
+
+/* The whole bar dims while a batch is in flight. */
+.presets.is-busy {
+  opacity: 0.7;
+}
+
+/* ===== Preset preview: confirm the batch before it is written =====
+ * A recessed sub-panel inside the preset card. It lists one row per setting
+ * the profile would touch, reading "Name  OLD -> NEW", so the batch is fully
+ * visible before the user commits it.
+ */
+.preset-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+/* The panel is focused programmatically to announce the batch to screen
+   readers; it is a container, not a control, so it shows no focus ring of its
+   own. The interactive children keep their own :focus-visible styles. */
+.preset-preview:focus {
+  outline: none;
+}
+
+.preset-preview__title {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.preset-preview__title strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.preset-preview__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.preset-preview__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 7px;
+  border-radius: 8px;
+}
+
+/* Zebra striping keeps a long batch scannable. */
+.preset-preview__item:nth-child(odd) {
+  background: var(--surface);
+}
+
+.preset-preview__glyph {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  color: var(--text-muted);
+  background: var(--surface-3);
+}
+
+.preset-preview__glyph svg {
+  width: 13px;
+  height: 13px;
+}
+
+.preset-preview__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+  font-weight: 620;
+}
+
+.preset-preview__flow {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.preset-preview__from {
+  color: var(--text-faint);
+}
+
+.preset-preview__arrow {
+  color: var(--text-faint);
+}
+
+.preset-preview__to--ok {
+  color: var(--ok);
+}
+
+.preset-preview__to--warn {
+  color: var(--warn);
+}
+
+.preset-preview__to--deny {
+  color: var(--deny);
+}
+
+.preset-preview__to--neutral {
+  color: var(--neutral);
+}
+
+.preset-preview__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preset-preview__apply {
+  flex: 1;
+  padding: 7px 13px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--surface);
+  background: var(--accent);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.preset-preview__apply:hover {
+  filter: brightness(1.08);
+}
+
+.preset-preview__apply:active {
+  transform: scale(0.97);
+}
+
+.preset-preview__apply:focus-visible,
+.preset-preview__cancel:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.preset-preview__cancel {
+  flex: none;
+  padding: 7px 14px;
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, transform 0.1s ease;
+}
+
+.preset-preview__cancel:hover {
+  color: var(--text);
+  background: var(--surface-3);
+  border-color: var(--accent);
+}
+
+.preset-preview__cancel:active {
+  transform: scale(0.97);
+}
+
+/* ===== Custom preset buttons ===== */
+.preset--custom .preset__icon {
+  color: var(--accent);
+}
+
+/* Dashed "create" action, visibly set apart from the profiles themselves. */
+.preset--new {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--border-strong);
+  color: var(--text-faint);
+}
+
+.preset--new:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  transform: translateY(-1px);
+}
+
+.preset--new .preset__icon {
+  color: currentColor;
+}
+
+/* ===== Custom preset editor ===== */
+.preset-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+/* Focused programmatically to announce the region; it is not a control. */
+.preset-editor:focus {
+  outline: none;
+}
+
+.preset-editor__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.preset-editor__field-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.preset-editor__input {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.preset-editor__input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-a12);
+}
+
+.preset-editor__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.preset-editor__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 7px;
+  border-radius: 8px;
+}
+
+.preset-editor__item:nth-child(odd) {
+  background: var(--surface);
+}
+
+.preset-editor__item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+  font-weight: 620;
+}
+
+.preset-editor__select {
+  flex: none;
+  padding: 4px 6px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  color: var(--text);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.preset-editor__select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.preset-editor__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preset-editor__save {
+  flex: 1;
+  padding: 7px 13px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--surface);
+  background: var(--accent);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.preset-editor__save:hover {
+  filter: brightness(1.08);
+}
+
+.preset-editor__save:active {
+  transform: scale(0.97);
+}
+
+.preset-editor__cancel {
+  flex: none;
+  padding: 7px 14px;
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, transform 0.1s ease;
+}
+
+.preset-editor__cancel:hover {
+  color: var(--text);
+  background: var(--surface-3);
+  border-color: var(--accent);
+}
+
+.preset-editor__cancel:active {
+  transform: scale(0.97);
+}
+
+.preset-editor__save:focus-visible,
+.preset-editor__cancel:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Delete action inside a custom preset's preview. */
+.preset-preview__delete {
+  flex: none;
+  padding: 7px 12px;
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--deny);
+  background: var(--deny-bg);
+  border: 1px solid var(--deny-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.preset-preview__delete:hover {
+  filter: brightness(1.05);
+}
+
+.preset-preview__delete:active {
+  transform: scale(0.97);
+}
+
+.preset-preview__delete:focus-visible {
+  outline: 2px solid var(--deny);
+  outline-offset: 2px;
+}
+
 /* ===== "All clear" hero ===== */
 .all-clear {
   display: flex;
@@ -973,8 +1636,8 @@ main {
   align-items: center;
   gap: 6px;
   text-align: center;
-  padding: 26px 16px 22px;
-  background: linear-gradient(180deg, var(--ok-bg) 0%, var(--surface) 72%);
+  padding: 28px 18px 24px;
+  background: linear-gradient(180deg, var(--ok-bg) 0%, var(--surface) 70%);
   border: 1px solid var(--ok-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
@@ -983,9 +1646,9 @@ main {
 .all-clear__icon {
   display: grid;
   place-items: center;
-  width: 50px;
-  height: 50px;
-  margin-bottom: 4px;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 6px;
   color: var(--ok);
   background: var(--surface);
   border-radius: 999px;
@@ -998,7 +1661,7 @@ main {
 }
 
 .all-clear__title {
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--ok);
@@ -1012,7 +1675,7 @@ main {
 
 /* ===== Notices + errors ===== */
 .notice {
-  padding: 14px 16px;
+  padding: 15px 16px;
   border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
@@ -1037,7 +1700,7 @@ main {
   border: 1px solid var(--deny-border);
   color: var(--deny);
   border-radius: var(--radius);
-  padding: 10px 12px;
+  padding: 11px 13px;
   font-size: 12px;
 }
 
@@ -1049,11 +1712,11 @@ main {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 11px 18px;
   border-top: 1px solid var(--border);
   background: var(--glass);
-  -webkit-backdrop-filter: blur(16px) saturate(1.6);
-  backdrop-filter: blur(16px) saturate(1.6);
+  -webkit-backdrop-filter: blur(18px) saturate(1.7);
+  backdrop-filter: blur(18px) saturate(1.7);
   font-size: 11px;
   color: var(--text-faint);
 }
@@ -1077,9 +1740,11 @@ main {
   font-weight: 650;
   border-radius: 4px;
   white-space: nowrap;
+  transition: color 0.15s ease;
 }
 
 .footer__link:hover {
+  color: var(--accent-strong);
   text-decoration: underline;
 }
 

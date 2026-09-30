@@ -142,6 +142,13 @@ const ICONS = {
       '<path d="M3 9.6h18"/>' +
       '<path d="M6.6 7.1h.01M9.6 7.1h.01"/>'
   ),
+  sliders: icon(
+    '<path d="M3.6 7.2h9.4M18.4 7.2h2"/>' +
+      '<path d="M3.6 16.8h2M11 16.8h9.4"/>' +
+      '<circle cx="15.6" cy="7.2" r="2.4"/>' +
+      '<circle cx="8.2" cy="16.8" r="2.4"/>'
+  ),
+  plus: icon('<path d="M12 5.4v13.2M5.4 12h13.2"/>'),
 
   // Fallbacks
   shield: icon(
@@ -261,6 +268,11 @@ const CONTENT_SETTING_KEYS = [
   ...new Set(CATEGORIES.flatMap((c) => c.items.map((i) => i.cs))),
 ];
 
+/** Lookup a row spec by its content-setting key (for labels/icons). */
+const SPEC_BY_CS = new Map(
+  CATEGORIES.flatMap((c) => c.items.map((i) => [i.cs, i]))
+);
+
 /**
  * chrome.contentSettings.<type>.get() resolves to { setting } where `setting`
  * is one of the values allowed for that type ('allow' | 'block' | 'ask' |
@@ -296,6 +308,130 @@ const REVOCATION_DEFAULT = {
   sound: 'allow',
   popups: 'block',
 };
+
+/*
+ * One-click permission profiles.
+ *
+ * A preset decides a target value for the audited content settings:
+ *   - `values[cs]` wins for any key it names.
+ *   - `resetOthers: true` sends every other audited key back to its browser
+ *     default (REVOCATION_DEFAULT), which is what makes "Balanced" a full
+ *     undo of past grants rather than a partial one.
+ *   - Keys with no decision are left exactly as they are.
+ * The whole batch is recorded on the undo stack as one entry.
+ *
+ * @typedef {Object} Preset
+ * @property {string}  id           Stable id (drives button styling).
+ * @property {string}  label        Button text.
+ * @property {string}  icon         Key into ICONS for the button glyph.
+ * @property {string}  hint         Tooltip describing the profile.
+ * @property {Object}  [values]     cs -> setting overrides.
+ * @property {boolean} [resetOthers] Reset unnamed keys to their default.
+ */
+
+/** @type {Preset[]} */
+const PRESETS = [
+  {
+    id: 'lockdown',
+    label: 'Lock down',
+    icon: 'shield',
+    hint: 'Block camera, microphone, location, notifications, clipboard and automatic downloads.',
+    values: {
+      camera: 'block',
+      microphone: 'block',
+      location: 'block',
+      notifications: 'block',
+      clipboard: 'block',
+      automaticDownloads: 'block',
+    },
+  },
+  {
+    id: 'balanced',
+    label: 'Balanced',
+    icon: 'sliders',
+    hint: 'Reset every permission on this site back to the browser default.',
+    values: {},
+    resetOthers: true,
+  },
+  {
+    id: 'camera',
+    label: 'Allow camera',
+    icon: 'camera',
+    hint: 'Grant camera access and reset everything else to the browser default.',
+    values: { camera: 'allow' },
+    resetOthers: true,
+  },
+];
+
+/* ==========================================================================
+ * Custom presets (user-defined profiles, persisted)
+ * ==========================================================================
+ * Users build their own profile in the editor and it is stored in
+ * chrome.storage.local, then rendered in the toolbar next to the built-ins.
+ * Custom presets flow through the exact same preview + single-batch-undo path
+ * as the built-in ones - they simply carry their own `values` map.
+ */
+
+const CUSTOM_PRESETS_KEY = 'customPresets';
+
+/** @type {Preset[]} User-defined profiles, oldest first. */
+let customPresets = [];
+
+/**
+ * Accept only well-formed stored entries (defends against hand-edited or
+ * partially-written storage) and rebuild the runtime shape.
+ */
+function normalizeCustomPreset(entry) {
+  if (!entry || typeof entry.label !== 'string' || typeof entry.values !== 'object') {
+    return null;
+  }
+  const values = {};
+  for (const [cs, val] of Object.entries(entry.values ?? {})) {
+    if (typeof val === 'string' && SETTING_LABELS[val]) values[cs] = val;
+  }
+  const label = entry.label.slice(0, 24).trim() || 'Custom preset';
+  return {
+    id: typeof entry.id === 'string' && entry.id ? entry.id : `custom:${Date.now().toString(36)}`,
+    label,
+    icon: 'sliders',
+    custom: true,
+    hint: `Custom preset: ${label}`,
+    values,
+  };
+}
+
+/** Load the saved custom presets (best effort). */
+async function loadCustomPresets() {
+  try {
+    const res = await chrome.storage?.local?.get?.(CUSTOM_PRESETS_KEY);
+    const list = res?.[CUSTOM_PRESETS_KEY];
+    customPresets = Array.isArray(list)
+      ? list.map(normalizeCustomPreset).filter(Boolean)
+      : [];
+  } catch {
+    customPresets = [];
+  }
+}
+
+/** Persist the custom presets as plain data (best effort; fire-and-forget). */
+function saveCustomPresets() {
+  try {
+    const stored = customPresets.map(({ id, label, values }) => ({
+      id,
+      label,
+      values,
+    }));
+    const p = chrome.storage?.local?.set?.({ [CUSTOM_PRESETS_KEY]: stored });
+    p?.catch?.(() => {});
+  } catch {
+    /* storage unavailable - custom presets last for this session only */
+  }
+}
+
+/** Built-in profiles followed by the user's own. */
+function allPresets() {
+  return [...PRESETS, ...customPresets];
+}
 
 /* ==========================================================================
  * Small utilities
@@ -349,6 +485,69 @@ function applyCollapsed(card, collapsed) {
   card
     .querySelector('.card__head')
     ?.setAttribute('aria-expanded', String(!collapsed));
+}
+
+/* ==========================================================================
+ * Theme preference (System / Light / Dark)
+ * ==========================================================================
+ * The palette follows the OS by default. The user can override it from the
+ * header toggle, and the choice is persisted in chrome.storage.local so the
+ * popup reopens the same way. There is no prefers-color-scheme media query in
+ * the CSS: this code resolves the preference (including the OS, via
+ * matchMedia) to a concrete light/dark value and stamps it on <html> as
+ * data-theme, which is what the stylesheet keys its dark palette off.
+ */
+
+const THEME_KEY = 'themePreference';
+const THEME_VALUES = ['system', 'light', 'dark'];
+
+/** Live OS dark-mode query; also tells us when to repaint "system". */
+const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+/** The user's stored choice ('system' | 'light' | 'dark'). */
+let themePreference = 'system';
+
+/**
+ * Resolve the preference to a concrete theme and paint it. "system" defers to
+ * the OS; the explicit values win regardless of the OS.
+ */
+function applyTheme() {
+  const resolved =
+    themePreference === 'system'
+      ? darkQuery.matches
+        ? 'dark'
+        : 'light'
+      : themePreference;
+  document.documentElement.dataset.theme = resolved;
+
+  for (const btn of el.themeToggle.querySelectorAll('[data-theme-value]')) {
+    const active = btn.dataset.themeValue === themePreference;
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-pressed', String(active));
+  }
+}
+
+/** Restore the saved preference (best effort; falls back to "system"). */
+async function loadTheme() {
+  let saved = 'system';
+  try {
+    const res = await chrome.storage?.local?.get?.(THEME_KEY);
+    saved = res?.[THEME_KEY] ?? 'system';
+  } catch {
+    /* storage unavailable - stay on system */
+  }
+  themePreference = THEME_VALUES.includes(saved) ? saved : 'system';
+  applyTheme();
+}
+
+/** Persist the current preference (best effort; fire-and-forget). */
+function saveTheme() {
+  try {
+    const p = chrome.storage?.local?.set?.({ [THEME_KEY]: themePreference });
+    p?.catch?.(() => {});
+  } catch {
+    /* storage unavailable - the choice still applies for this session */
+  }
 }
 
 /**
@@ -489,12 +688,26 @@ const el = {
   meterBlocked: document.getElementById('meterBlocked'),
   meterDefault: document.getElementById('meterDefault'),
   skeleton: document.getElementById('skeleton'),
+  actionsBar: document.getElementById('actionsBar'),
+  undoBar: document.getElementById('undoBar'),
+  undoText: document.getElementById('undoText'),
+  undoBtn: document.getElementById('undoBtn'),
+  resetSiteBtn: document.getElementById('resetSiteBtn'),
+  presets: document.getElementById('presets'),
+  presetsRow: document.getElementById('presetsRow'),
+  presetPreview: document.getElementById('presetPreview'),
+  presetEditor: document.getElementById('presetEditor'),
+  presetName: document.getElementById('presetName'),
+  presetEditorList: document.getElementById('presetEditorList'),
+  presetSaveBtn: document.getElementById('presetSaveBtn'),
+  presetCancelBtn: document.getElementById('presetCancelBtn'),
   versionChip: document.getElementById('versionChip'),
   siteUrl: document.getElementById('siteUrl'),
   siteInitial: document.getElementById('siteInitial'),
   favicon: document.getElementById('favicon'),
   summaryBadge: document.getElementById('summaryBadge'),
   summaryText: document.getElementById('summaryText'),
+  themeToggle: document.getElementById('themeToggle'),
   categories: document.getElementById('categories'),
   allClear: document.getElementById('allClear'),
   notAuditable: document.getElementById('notAuditable'),
@@ -574,6 +787,10 @@ function renderPermItem(parent, spec, setting, target) {
   allowBtn.classList.toggle('is-active', granted);
   blockBtn.classList.toggle('is-active', blocked);
 
+  // The value this row currently holds, captured as the "from" half of the
+  // undo entry so every action can be reversed to exactly where it started.
+  const currentValue = isHostRow ? (granted ? 'allow' : 'block') : setting;
+
   if (isHostRow) {
     // This extension's own host access: Enable asks for the origin, Disable
     // removes it (both handled by applySetting via chrome.permissions).
@@ -581,19 +798,19 @@ function renderPermItem(parent, spec, setting, target) {
     blockBtn.disabled = !granted;
     blockBtn.classList.toggle('is-active', !granted);
     allowBtn.addEventListener('click', () =>
-      applySetting(spec, target, 'allow', allowBtn)
+      changeSetting(spec, target, currentValue, 'allow', allowBtn)
     );
     blockBtn.addEventListener('click', () =>
-      applySetting(spec, target, 'block', blockBtn)
+      changeSetting(spec, target, currentValue, 'block', blockBtn)
     );
   } else {
     allowBtn.disabled = !known;
     blockBtn.disabled = !known;
     allowBtn.addEventListener('click', () =>
-      applySetting(spec, target, 'allow', allowBtn)
+      changeSetting(spec, target, currentValue, 'allow', allowBtn)
     );
     blockBtn.addEventListener('click', () =>
-      applySetting(spec, target, 'block', blockBtn)
+      changeSetting(spec, target, currentValue, 'block', blockBtn)
     );
 
     // Reset is offered only when the row can move back to its default and is
@@ -602,7 +819,7 @@ function renderPermItem(parent, spec, setting, target) {
     resetBtn.hidden =
       spec.revoke === false || dflt === undefined || !known || setting === dflt;
     resetBtn.addEventListener('click', () =>
-      applySetting(spec, target, dflt, resetBtn)
+      changeSetting(spec, target, currentValue, dflt, resetBtn)
     );
   }
 
@@ -624,15 +841,19 @@ function renderPermItem(parent, spec, setting, target) {
  * a type for every site, whereas writing back a value is per-origin.
  */
 async function applySetting(spec, target, value, button) {
-  if (value === undefined) return;
-  button.disabled = true;
-  const label = button.textContent;
-  button.textContent = 'Working…';
+  if (value === undefined) return false;
+  const label = button?.textContent;
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Working…';
+  }
 
   const fail = (err) => {
     console.warn(`[auditor] ${spec.cs}=${value} failed`, err);
-    button.textContent = 'Failed - retry';
-    button.disabled = false;
+    if (button) {
+      button.textContent = 'Failed - retry';
+      button.disabled = false;
+    }
   };
 
   // Pseudo-key: adjust this extension's own host permission for the origin.
@@ -650,25 +871,639 @@ async function applySetting(spec, target, value, button) {
       }
     } catch (err) {
       fail(err);
-      return;
+      return false;
     }
-    runAudit();
-    return;
+    return true;
   }
 
   const ns = chrome.contentSettings?.[spec.cs];
   if (!ns?.set) {
-    button.textContent = label;
-    button.disabled = false;
-    return;
+    if (button) {
+      button.textContent = label;
+      button.disabled = false;
+    }
+    return false;
   }
   try {
     await ns.set({ primaryPattern: target.pattern, setting: value });
   } catch (err) {
     fail(err);
+    return false;
+  }
+  return true;
+}
+
+/* ==========================================================================
+ * Undo history + site-wide reset
+ * ==========================================================================
+ * Every change made from the popup lands on an in-memory stack, so the most
+ * recent action (or a whole "Reset this site" batch) can be walked back. The
+ * stack is scoped to the audited origin and dropped when the popup starts
+ * auditing a different site.
+ */
+
+/** @type {Array<{label: string, ops: Array<{cs: string, from: string}>}>} */
+let undoStack = [];
+/** Origin the current undo stack belongs to. */
+let undoOrigin = null;
+/** Target + audited settings of the last render, reused by reset/undo. */
+let activeTarget = null;
+let activeSettings = null;
+
+/** Human label for one applied change, shown in the undo bar. */
+function changeLabel(spec, value) {
+  if (spec.cs === '__host__') {
+    return value === 'allow'
+      ? `${spec.label} granted`
+      : `${spec.label} revoked`;
+  }
+  if (value === 'allow') return `${spec.label} enabled`;
+  if (value === 'block') return `${spec.label} disabled`;
+  return `${spec.label} reset`;
+}
+
+/** Push a reversible entry onto the undo stack. */
+function recordUndo(ops, label) {
+  if (!ops.length) return;
+  undoStack.push({ label, ops });
+}
+
+/** Repaint the undo bar for the current stack (hidden when empty). */
+function renderUndoBar() {
+  const entry = undoStack[undoStack.length - 1];
+  el.undoBtn.disabled = false;
+  el.undoBar.hidden = !entry;
+  if (!entry) {
+    el.undoText.textContent = '';
     return;
   }
-  runAudit(); // re-query so the UI reflects the new effective settings
+  const more = undoStack.length > 1 ? ` (+${undoStack.length - 1} more)` : '';
+  el.undoText.textContent = entry.label + more;
+}
+
+/** True when any audited row currently differs from its browser default. */
+function canResetSite() {
+  if (!activeSettings) return false;
+  for (const [cs, entry] of activeSettings) {
+    const s = entry?.setting;
+    const dflt = REVOCATION_DEFAULT[cs];
+    if (s && dflt !== undefined && s !== dflt) return true;
+  }
+  return false;
+}
+
+/** Apply one change, remember how to undo it, then re-audit. */
+async function changeSetting(spec, target, fromValue, toValue, button) {
+  const ok = await applySetting(spec, target, toValue, button);
+  if (!ok) return;
+  recordUndo([{ cs: spec.cs, from: fromValue }], changeLabel(spec, toValue));
+  runAudit();
+}
+
+/** Walk back the most recent change (single row or a whole reset batch). */
+async function undoLastChange() {
+  const entry = undoStack.pop();
+  if (!entry || !activeTarget) return;
+  el.undoBtn.disabled = true;
+  for (const op of [...entry.ops].reverse()) {
+    await applySetting({ cs: op.cs }, activeTarget, op.from, null);
+  }
+  renderUndoBar();
+  runAudit();
+}
+
+/** Return every audited row on this site to Chrome's default value. */
+async function resetSiteToDefaults() {
+  const target = activeTarget;
+  if (!target || !activeSettings) return;
+
+  const ops = [];
+  for (const [cs, entry] of activeSettings) {
+    const from = entry?.setting;
+    const dflt = REVOCATION_DEFAULT[cs];
+    if (!from || dflt === undefined || from === dflt) continue;
+    ops.push({ cs, from });
+  }
+  if (!ops.length) return;
+
+  el.resetSiteBtn.disabled = true;
+  el.resetSiteBtn.textContent = 'Resetting…';
+  for (const op of ops) {
+    await applySetting({ cs: op.cs }, target, REVOCATION_DEFAULT[op.cs], null);
+  }
+  recordUndo(ops, 'All permissions reset to defaults');
+
+  el.resetSiteBtn.textContent = 'Reset this site';
+  runAudit();
+}
+
+/* ==========================================================================
+ * Site presets (one-click permission profiles)
+ * ==========================================================================
+ * Clicking a profile first opens a confirmation panel that lists the exact
+ * rows the profile would change (label + current value -> new value). Nothing
+ * is written until the user confirms. On confirm the whole batch is applied
+ * in one pass and pushed onto the undo stack as a single entry - so a whole
+ * profile is walked back with one Undo click.
+ */
+
+/** True while a preset batch is being written (guards double-clicks). */
+let presetBusy = false;
+/** The profile currently awaiting confirmation, or null. */
+let pendingPreset = null;
+/** The ops shown in the open preview, applied verbatim on confirm. */
+let pendingOps = [];
+/** The button that opened the preview, so focus can return to it. */
+let previewTrigger = null;
+/** The button that opened the editor, so focus can return to it. */
+let editorTrigger = null;
+/** The single preset button that owns the toolbar's roving tab stop. */
+let presetTabStop = null;
+
+/**
+ * Decide the target setting for one content-setting key under a profile.
+ * @returns {string|undefined} value to write, or undefined to leave it alone.
+ */
+function presetTargetFor(preset, cs) {
+  if (preset.values?.[cs] !== undefined) return preset.values[cs];
+  if (preset.resetOthers) return REVOCATION_DEFAULT[cs];
+  return undefined;
+}
+
+/** Reflect the busy state across the preset bar. */
+function setPresetsBusy(busy) {
+  presetBusy = busy;
+  el.presets.classList.toggle('is-busy', busy);
+  for (const btn of el.presetsRow.querySelectorAll('.preset')) {
+    btn.disabled = busy;
+    btn.setAttribute('aria-busy', String(busy));
+  }
+  // Disabling changes which buttons are focusable, so re-pick the tab stop.
+  setPresetTabStop(presetTabStop);
+}
+
+/**
+ * Roving tabindex: exactly one preset button stays in the Tab order (tabindex
+ * 0) and the rest are removed (tabindex -1). Arrow keys then move that single
+ * tab stop, so the whole toolbar is one Tab stop in the page's focus order.
+ *
+ * @param {HTMLElement|null} btn  Preferred button to own the tab stop.
+ * @param {{focus?: boolean}} [options]
+ */
+function setPresetTabStop(btn, { focus = false } = {}) {
+  const buttons = [...el.presetsRow.querySelectorAll('.preset')];
+  const enabled = buttons.filter((b) => !b.disabled);
+  const target = btn && enabled.includes(btn) ? btn : enabled[0] ?? null;
+  presetTabStop = target;
+  for (const b of buttons) b.tabIndex = b === target ? 0 : -1;
+  if (focus && target) target.focus();
+}
+
+/**
+ * Build the preset buttons (built-ins + user-defined) plus the "New preset"
+ * action, from the single PRESETS/customPresets source of truth.
+ *
+ * Keyboard model: the row is a real ARIA toolbar. Only one button is in the
+ * Tab order at a time (roving tabindex); Left/Right and Home/End move that
+ * single tab stop between profiles, so the group is one Tab stop total. Each
+ * button advertises the panel it controls via aria-controls/aria-expanded.
+ * Called again whenever a custom preset is saved or deleted.
+ */
+function renderPresets() {
+  el.presetsRow.replaceChildren();
+  el.presetsRow.setAttribute('role', 'toolbar');
+  el.presetsRow.setAttribute('aria-orientation', 'horizontal');
+  el.presetsRow.setAttribute('aria-label', 'Permission profiles');
+
+  const frag = document.createDocumentFragment();
+
+  for (const preset of allPresets()) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `preset preset--${preset.custom ? 'custom' : preset.id}`;
+    btn.dataset.preset = preset.id;
+    btn.title = preset.hint;
+    btn.tabIndex = -1; // setPresetTabStop promotes exactly one back to 0
+    btn.setAttribute('aria-controls', 'presetPreview');
+    btn.setAttribute('aria-expanded', 'false');
+
+    const glyph = document.createElement('span');
+    glyph.className = 'preset__icon';
+    glyph.innerHTML = ICONS[preset.icon] ?? ICONS.shield;
+
+    const label = document.createElement('span');
+    label.className = 'preset__label';
+    label.textContent = preset.label;
+
+    btn.append(glyph, label);
+    btn.addEventListener('click', () => {
+      setPresetTabStop(btn);
+      applyPreset(preset, btn);
+    });
+    frag.appendChild(btn);
+  }
+
+  // "New preset" action lives at the end of the same toolbar.
+  const addBtn = document.createElement('button');
+  addBtn.type = 'button';
+  addBtn.className = 'preset preset--new';
+  addBtn.dataset.preset = '__new__';
+  addBtn.tabIndex = -1;
+  addBtn.title = 'Create a custom preset from this site\u2019s permissions';
+  addBtn.setAttribute('aria-controls', 'presetEditor');
+  addBtn.setAttribute('aria-expanded', 'false');
+
+  const addGlyph = document.createElement('span');
+  addGlyph.className = 'preset__icon';
+  addGlyph.innerHTML = ICONS.plus;
+
+  const addLabel = document.createElement('span');
+  addLabel.className = 'preset__label';
+  addLabel.textContent = 'New preset';
+
+  addBtn.append(addGlyph, addLabel);
+  addBtn.addEventListener('click', () => {
+    setPresetTabStop(addBtn);
+    openPresetEditor(addBtn);
+  });
+  frag.appendChild(addBtn);
+
+  el.presetsRow.appendChild(frag);
+  setPresetTabStop(null);
+}
+
+/** Keep the roving tab stop in sync with wherever focus actually lands. */
+function onPresetsRowFocusIn(event) {
+  const btn = event.target.closest?.('.preset');
+  if (btn) setPresetTabStop(btn);
+}
+
+/** Move the toolbar's single tab stop among the enabled buttons. */
+function onPresetsRowKeydown(event) {
+  const step = { ArrowRight: 1, ArrowLeft: -1 };
+  const isHome = event.key === 'Home';
+  const isEnd = event.key === 'End';
+  if (!(event.key in step) && !isHome && !isEnd) return;
+
+  const buttons = [
+    ...el.presetsRow.querySelectorAll('.preset:not(:disabled)'),
+  ];
+  if (buttons.length < 2) return;
+  const index = buttons.indexOf(document.activeElement);
+  if (index === -1) return;
+
+  event.preventDefault();
+  const last = buttons.length - 1;
+  const next = isHome
+    ? 0
+    : isEnd
+      ? last
+      : (index + step[event.key] + buttons.length) % buttons.length;
+  // Move focus and hand the roving tab stop to the same button.
+  setPresetTabStop(buttons[next], { focus: true });
+}
+
+/** Mark exactly one preset button as expanded (or none when null). */
+function setPresetExpanded(activeBtn) {
+  for (const btn of el.presetsRow.querySelectorAll('.preset')) {
+    btn.setAttribute('aria-expanded', String(btn === activeBtn));
+  }
+}
+
+/** Return focus to a button if it is still in the document. */
+function restoreFocus(node) {
+  if (node && node.isConnected) node.focus();
+}
+
+/** Human row label for a content-setting key (falls back to the key). */
+function specFor(cs) {
+  return SPEC_BY_CS.get(cs) ?? { label: cs, icon: 'dot' };
+}
+
+/**
+ * Resolve the exact set of writes a profile would make against the current
+ * audit. Only keys that actually change are included, so the preview and the
+ * applied batch describe the same rows.
+ * @returns {Array<{cs: string, from: string, to: string}>}
+ */
+function computePresetOps(preset) {
+  const ops = [];
+  if (!activeSettings) return ops;
+  for (const [cs, entry] of activeSettings) {
+    if (cs === '__host__') continue; // preset scope is content settings only
+    const from = entry?.setting;
+    const to = presetTargetFor(preset, cs);
+    if (!from || to === undefined || from === to) continue;
+    ops.push({ cs, from, to });
+  }
+  return ops;
+}
+
+/** Build one "Name: from -> to" preview row. */
+function renderPreviewRow(op) {
+  const spec = specFor(op.cs);
+  const li = document.createElement('li');
+  li.className = 'preset-preview__item';
+
+  const glyph = document.createElement('span');
+  glyph.className = 'preset-preview__glyph';
+  glyph.innerHTML = ICONS[spec.icon] ?? ICONS.dot;
+
+  const name = document.createElement('span');
+  name.className = 'preset-preview__name';
+  name.textContent = spec.label;
+
+  const flow = document.createElement('span');
+  flow.className = 'preset-preview__flow';
+
+  const fromInfo = SETTING_LABELS[op.from] ?? { text: op.from, cls: 'neutral' };
+  const toInfo = SETTING_LABELS[op.to] ?? { text: op.to, cls: 'neutral' };
+
+  // The arrow is decorative; give the flow an explicit spoken form so screen
+  // readers hear "Ask (default) to Blocked" rather than two loose words.
+  flow.setAttribute('aria-label', `${fromInfo.text} to ${toInfo.text}`);
+
+  const from = document.createElement('span');
+  from.className = 'preset-preview__from';
+  from.textContent = fromInfo.text;
+
+  const arrow = document.createElement('span');
+  arrow.className = 'preset-preview__arrow';
+  arrow.setAttribute('aria-hidden', 'true');
+  arrow.textContent = '\u2192';
+
+  const to = document.createElement('span');
+  to.className = `preset-preview__to preset-preview__to--${toInfo.cls}`;
+  to.textContent = toInfo.text;
+
+  flow.append(from, arrow, to);
+  li.append(glyph, name, flow);
+  return li;
+}
+
+/**
+ * Close the confirmation panel and forget the pending profile.
+ * @param {{restoreFocus?: boolean}} [options]
+ */
+function closePresetPreview(options = {}) {
+  const trigger = previewTrigger;
+  pendingPreset = null;
+  pendingOps = [];
+  previewTrigger = null;
+  setPresetExpanded(null);
+  el.presetPreview.hidden = true;
+  el.presetPreview.replaceChildren();
+  if (options.restoreFocus) restoreFocus(trigger);
+}
+
+/**
+ * Open the confirmation panel for a profile: show what would change (or that
+ * nothing would) and let the user apply or cancel. Focus moves into the
+ * panel so the batch is announced and Tab reaches Apply / Cancel next.
+ * @param {Preset} preset
+ * @param {HTMLElement|null} [trigger] Button that opened the preview.
+ */
+function applyPreset(preset, trigger = null) {
+  if (presetBusy || !activeSettings) return;
+  closePresetEditor();
+
+  const ops = computePresetOps(preset);
+  pendingPreset = preset;
+  pendingOps = ops;
+  previewTrigger = trigger ?? document.activeElement;
+  setPresetExpanded(trigger);
+
+  const panel = el.presetPreview;
+  panel.replaceChildren();
+
+  const title = document.createElement('p');
+  title.className = 'preset-preview__title';
+  const name = document.createElement('strong');
+  name.textContent = preset.label;
+  title.append(name);
+
+  const actions = document.createElement('div');
+  actions.className = 'preset-preview__actions';
+
+  const cancel = document.createElement('button');
+  cancel.type = 'button';
+  cancel.className = 'preset-preview__cancel';
+  cancel.textContent = ops.length ? 'Cancel' : 'Close';
+  cancel.addEventListener('click', () => closePresetPreview({ restoreFocus: true }));
+
+  if (ops.length) {
+    title.append(` will change ${ops.length} permission${ops.length === 1 ? '' : 's'}:`);
+
+    const list = document.createElement('ul');
+    list.className = 'preset-preview__list';
+    for (const op of ops) list.appendChild(renderPreviewRow(op));
+
+    const confirm = document.createElement('button');
+    confirm.type = 'button';
+    confirm.className = 'preset-preview__apply';
+    confirm.textContent = `Apply to ${ops.length} setting${ops.length === 1 ? '' : 's'}`;
+    confirm.addEventListener('click', commitPreset);
+
+    actions.append(confirm, cancel);
+
+    // Custom profiles can be removed from right here, where the user can see
+    // exactly what the profile does before deleting it.
+    if (preset.custom) {
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'preset-preview__delete';
+      del.textContent = 'Delete preset';
+      del.addEventListener('click', () => deleteCustomPreset(preset));
+      actions.append(del);
+    }
+
+    panel.append(title, list, actions);
+  } else {
+    title.append(' has nothing to change \u2014 this site already matches.');
+    actions.append(cancel);
+    panel.append(title, actions);
+  }
+
+  panel.hidden = false;
+  // Move focus onto the panel so screen readers announce the batch and the
+  // next Tab lands on Apply (or Close) inside the panel.
+  panel.focus();
+}
+
+/**
+ * Close the preview from the keyboard (Escape) and hand focus back to the
+ * button that opened it, so the user is never stranded after the panel
+ * disappears.
+ */
+function onPresetPreviewKeydown(event) {
+  if (event.key !== 'Escape') return;
+  event.preventDefault();
+  closePresetPreview({ restoreFocus: true });
+}
+
+/** Write the previewed batch and record it as one undoable entry. */
+async function commitPreset() {
+  const preset = pendingPreset;
+  const target = activeTarget;
+  const ops = pendingOps;
+  const trigger = previewTrigger;
+  closePresetPreview();
+  if (presetBusy || !preset || !target || !ops.length) return;
+
+  setPresetsBusy(true);
+
+  // Apply each op; only record the ones that really landed so Undo never
+  // tries to walk back a change that failed.
+  const applied = [];
+  for (const op of ops) {
+    const ok = await applySetting({ cs: op.cs }, target, op.to, null);
+    if (ok) applied.push({ cs: op.cs, from: op.from });
+  }
+
+  if (applied.length) {
+    const plural = applied.length === 1 ? '' : 's';
+    recordUndo(applied, `${preset.label} applied to ${applied.length} setting${plural}`);
+  }
+
+  setPresetsBusy(false);
+  await runAudit();
+  // The audit re-rendered the rows; return focus to the preset the user used.
+  restoreFocus(trigger);
+}
+
+/* ==========================================================================
+ * Custom preset editor
+ * ==========================================================================
+ * The editor builds a name + per-permission target map, saves it through the
+ * custom-preset store, then re-renders the toolbar so the new profile sits
+ * beside the built-ins. It follows the same focus conventions as the preview
+ * panel: focus moves in on open, Escape closes and restores focus.
+ */
+
+/** Build the editor's per-permission rows, prefilled from current settings. */
+function renderPresetEditorList() {
+  el.presetEditorList.replaceChildren();
+  if (!activeSettings) return;
+
+  const frag = document.createDocumentFragment();
+  for (const cs of CONTENT_SETTING_KEYS) {
+    const entry = activeSettings.get(cs);
+    if (!entry) continue; // this key was not audited on this page
+    const spec = specFor(cs);
+
+    const li = document.createElement('li');
+    li.className = 'preset-editor__item';
+
+    const name = document.createElement('span');
+    name.className = 'preset-editor__item-name';
+    name.textContent = spec.label;
+
+    const select = document.createElement('select');
+    select.className = 'preset-editor__select';
+    select.dataset.cs = cs;
+    select.setAttribute('aria-label', `${spec.label} target`);
+
+    const options = [
+      ['', 'Default'],
+      ['allow', 'Allow'],
+      ['block', 'Block'],
+    ];
+    // Only ask-capable types accept 'ask'; offering it for cookies or scripts
+    // would produce an invalid write.
+    if (REVOCATION_DEFAULT[cs] === 'ask') options.push(['ask', 'Ask']);
+
+    const current = entry.setting === 'session_only' ? 'allow' : entry.setting;
+    for (const [value, text] of options) {
+      const opt = document.createElement('option');
+      opt.value = value;
+      opt.textContent = text;
+      select.appendChild(opt);
+    }
+    select.value = options.some(([v]) => v === current) ? current : '';
+
+    li.append(name, select);
+    frag.appendChild(li);
+  }
+  el.presetEditorList.appendChild(frag);
+}
+
+/** Open the editor, closing any open preview first. */
+function openPresetEditor(trigger) {
+  if (presetBusy || !activeSettings) return;
+  closePresetPreview();
+  editorTrigger = trigger ?? document.activeElement;
+  setPresetExpanded(trigger);
+  renderPresetEditorList();
+  el.presetName.value = '';
+  el.presetEditor.hidden = false;
+  el.presetName.focus();
+}
+
+/** Close the editor and forget the in-progress profile. */
+function closePresetEditor(options = {}) {
+  const trigger = editorTrigger;
+  editorTrigger = null;
+  setPresetExpanded(null);
+  el.presetEditor.hidden = true;
+  el.presetEditorList.replaceChildren();
+  if (options.restoreFocus) restoreFocus(trigger);
+}
+
+/** Read the editor and append the profile to the saved custom presets. */
+function savePresetFromEditor() {
+  if (presetBusy) return;
+
+  const values = {};
+  for (const select of el.presetEditorList.querySelectorAll(
+    '.preset-editor__select'
+  )) {
+    if (select.value) values[select.dataset.cs] = select.value;
+  }
+
+  const label =
+    (el.presetName.value ?? '').trim().slice(0, 24) || 'Custom preset';
+  const preset = {
+    id: `custom:${Date.now().toString(36)}`,
+    label,
+    icon: 'sliders',
+    custom: true,
+    hint: `Custom preset: ${label}`,
+    values,
+  };
+
+  customPresets.push(preset);
+  saveCustomPresets();
+  closePresetEditor();
+  renderPresets();
+
+  // Hand focus (and the tab stop) to the profile just created.
+  const btn = el.presetsRow.querySelector(
+    `.preset[data-preset="${preset.id}"]`
+  );
+  setPresetTabStop(btn, { focus: Boolean(btn) });
+}
+
+/** Remove a custom profile, re-render the toolbar, and re-home focus. */
+function deleteCustomPreset(preset) {
+  if (!preset?.custom) return;
+  customPresets = customPresets.filter((p) => p.id !== preset.id);
+  saveCustomPresets();
+  closePresetPreview();
+  renderPresets();
+  setPresetTabStop(el.presetsRow.querySelector('.preset'), { focus: true });
+}
+
+/** Editor keyboard: Escape closes, Enter in the name field saves. */
+function onPresetEditorKeydown(event) {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closePresetEditor({ restoreFocus: true });
+    return;
+  }
+  if (event.key === 'Enter' && event.target === el.presetName) {
+    event.preventDefault();
+    savePresetFromEditor();
+  }
 }
 
 /**
@@ -861,6 +1696,12 @@ async function runAudit() {
   el.summaryBadge.hidden = true;
   el.summaryText.textContent = '';
   el.searchBar.hidden = true;
+  el.presets.hidden = true;
+  // A fresh audit invalidates any open preset preview or editor.
+  closePresetPreview();
+  closePresetEditor();
+  el.actionsBar.hidden = true;
+  el.undoBar.hidden = true;
   el.noResults.hidden = true;
   el.statStrip.hidden = true;
   el.meter.hidden = true;
@@ -926,6 +1767,13 @@ async function runAudit() {
   el.siteUrl.hidden = false;
   showInitial(prettyUrl(url));
 
+  // Undo history is per-origin: moving to a new site starts a fresh stack.
+  activeTarget = target;
+  if (target.origin !== undoOrigin) {
+    undoOrigin = target.origin;
+    undoStack = [];
+  }
+
   if (target.faviconUrl) {
     // Local lookup via the favicon API - no third-party request. The letter
     // tile covers the gap until the image decodes (and forever if it fails).
@@ -949,6 +1797,7 @@ async function runAudit() {
     auditContentSettings(target.primaryUrl),
     auditHostPermissions(target.pattern),
   ]);
+  activeSettings = settings;
 
   // 6.5 First real paint: the skeleton has done its job.
   el.skeleton.hidden = true;
@@ -995,9 +1844,16 @@ async function runAudit() {
     summarize(settings, hostInfo);
   }
 
-  // 10. Show the filter bar only when there is something to filter, then
-  //     re-apply whatever is in the box (a revoke re-renders every row).
-  el.searchBar.hidden = el.categories.querySelector('.card') === null;
+  // 10. Show the filter bar and site actions only when there is something to
+  //     act on, then re-apply whatever is in the box (a revoke re-renders
+  //     every row).
+  const hasCards = el.categories.querySelector('.card') !== null;
+  el.searchBar.hidden = !hasCards;
+  el.presets.hidden = !hasCards;
+  el.actionsBar.hidden = !hasCards;
+  el.resetSiteBtn.disabled = !canResetSite();
+  setPresetsBusy(false);
+  renderUndoBar();
   applyFilter(el.search.value);
 }
 
@@ -1040,6 +1896,23 @@ el.searchClear.addEventListener('click', () => {
   el.search.focus();
 });
 
+/* Site actions: walk back the last change, or reset every row at once. */
+el.undoBtn.addEventListener('click', undoLastChange);
+el.resetSiteBtn.addEventListener('click', resetSiteToDefaults);
+
+/* Preset bar keyboard support: arrow-key navigation between profiles and
+   Escape to dismiss an open preview and return focus to its button. */
+el.presetsRow.addEventListener('keydown', onPresetsRowKeydown);
+el.presetsRow.addEventListener('focusin', onPresetsRowFocusIn);
+el.presetPreview.addEventListener('keydown', onPresetPreviewKeydown);
+
+/* Custom preset editor: save/cancel, Escape to dismiss, Enter to save. */
+el.presetEditor.addEventListener('keydown', onPresetEditorKeydown);
+el.presetSaveBtn.addEventListener('click', savePresetFromEditor);
+el.presetCancelBtn.addEventListener('click', () =>
+  closePresetEditor({ restoreFocus: true })
+);
+
 /* Footer link: open Chrome's site settings in a new tab. */
 el.settingsLink.addEventListener('click', (e) => {
   e.preventDefault();
@@ -1047,4 +1920,27 @@ el.settingsLink.addEventListener('click', (e) => {
   if (url) chrome.tabs.create({ url });
 });
 
-runAudit();
+/* Theme toggle: pick System / Light / Dark (persisted across popup opens). */
+el.themeToggle.addEventListener('click', (event) => {
+  const btn = event.target.closest('[data-theme-value]');
+  if (!btn) return;
+  themePreference = btn.dataset.themeValue;
+  applyTheme();
+  saveTheme();
+});
+
+/* While following the system, react to the OS flipping light/dark. */
+darkQuery.addEventListener('change', () => {
+  if (themePreference === 'system') applyTheme();
+});
+
+/* Paint the theme before the first frame (from the OS hint), then refine it
+   once the stored preference loads. */
+applyTheme();
+loadTheme();
+
+/* Restore saved custom presets, then build the bar and audit the tab. */
+loadCustomPresets().then(() => {
+  renderPresets();
+  runAudit();
+});
