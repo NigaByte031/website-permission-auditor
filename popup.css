@@ -134,6 +134,14 @@ button {
   font: inherit;
 }
 
+/*
+ * The [hidden] attribute must always win, even over component display rules
+ * (flex/grid) that would otherwise out-specify the UA default.
+ */
+[hidden] {
+  display: none !important;
+}
+
 /* ===== Slim floating scrollbar ===== */
 ::-webkit-scrollbar {
   width: 10px;
@@ -266,6 +274,84 @@ main {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* ===== Filter bar ===== */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.search__icon {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  color: var(--text-faint);
+}
+
+.search__input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+
+.search__input:focus {
+  outline: none;
+}
+
+.search__input::placeholder {
+  color: var(--text-faint);
+}
+
+/* We ship our own clear affordance, so hide WebKit's built-in one. */
+.search__input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search__clear {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.search__clear:hover {
+  background: var(--border-strong);
+  color: var(--text);
+}
+
+/* Empty-filter state. */
+.no-results {
+  margin: 2px 0;
+  padding: 18px 10px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 /* ===== Cards ===== */

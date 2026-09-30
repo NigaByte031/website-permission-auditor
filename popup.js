@@ -370,6 +370,10 @@ async function auditHostPermissions(pattern) {
 
 const el = {
   siteName: document.getElementById('siteName'),
+  searchBar: document.getElementById('searchBar'),
+  search: document.getElementById('permSearch'),
+  searchClear: document.getElementById('searchClear'),
+  noResults: document.getElementById('noResults'),
   siteUrl: document.getElementById('siteUrl'),
   favicon: document.getElementById('favicon'),
   summaryBadge: document.getElementById('summaryBadge'),
@@ -430,6 +434,11 @@ function renderPermItem(parent, spec, setting, target) {
     );
   }
 
+  // Haystack for the live filter: label + effective value + description.
+  node.dataset.search = [spec.label, info.text, spec.detail]
+    .join(' ')
+    .toLowerCase();
+
   parent.appendChild(node);
 }
 
@@ -486,6 +495,8 @@ function renderCategory(cat, target, settings) {
   if (items.length === 0) return;
 
   const card = el.tplCategory.content.firstElementChild.cloneNode(true);
+  card.dataset.cardId = cat.id;
+  card.dataset.total = String(items.length);
   card.querySelector('.card__icon').textContent = cat.icon;
   card.querySelector('.card__title').textContent = cat.title;
 
@@ -509,6 +520,13 @@ function renderCategory(cat, target, settings) {
     const setting = settings.get(spec.cs)?.setting ?? 'unknown';
     renderPermItem(list, spec, setting, target);
   }
+
+  // Prefix each row's haystack with its category title so the filter can
+  // match words like "hardware" or "clipboard" as well as row labels.
+  for (const row of list.children) {
+    row.dataset.search = `${cat.title} ${row.dataset.search}`.toLowerCase();
+  }
+
   el.categories.appendChild(card);
 }
 
@@ -543,6 +561,71 @@ function summarize(settings, hostInfo) {
 }
 
 /* ==========================================================================
+ * Live filter (popup-local; the query itself is never persisted)
+ * ==========================================================================
+ * Filtering is pure DOM work: rows that do not match get the hidden
+ * attribute, cards whose rows all fail are hidden, and matching cards are
+ * shown expanded for the duration of the search (their saved collapse state
+ * is restored as soon as the query is cleared).
+ */
+
+/** Current query, normalized to lowercase/trimmed. */
+let filterQuery = '';
+
+/** Normalize user input for case-insensitive substring matching. */
+function normalizeQuery(value) {
+  return (value ?? '').trim().toLowerCase();
+}
+
+/**
+ * Apply the current query to every rendered card.
+ * @returns {{visibleCards: number, matches: number}}
+ */
+function applyFilter(rawQuery) {
+  filterQuery = normalizeQuery(rawQuery);
+  const searching = filterQuery.length > 0;
+  let visibleCards = 0;
+  let matches = 0;
+
+  for (const card of el.categories.querySelectorAll('.card')) {
+    const total = Number(card.dataset.total ?? 0);
+    let cardMatches = 0;
+
+    for (const row of card.querySelectorAll('.perm')) {
+      const hit = !searching || row.dataset.search.includes(filterQuery);
+      row.hidden = !hit;
+      if (hit) cardMatches++;
+    }
+
+    card.hidden = cardMatches === 0;
+    if (cardMatches > 0) visibleCards++;
+    matches += cardMatches;
+
+    // Searching temporarily expands hits; clearing restores the saved state.
+    const collapsed = searching
+      ? false
+      : Boolean(collapsedState[card.dataset.cardId]);
+    applyCollapsed(card, collapsed);
+
+    const count = card.querySelector('.card__count');
+    if (count) {
+      count.textContent = searching
+        ? `${cardMatches}/${total}`
+        : String(total);
+    }
+  }
+
+  el.searchClear.hidden = !searching;
+  const nothingFound = searching && visibleCards === 0;
+  el.noResults.hidden = !nothingFound;
+  if (nothingFound) {
+    el.noResults.textContent = `No permissions match \u201c${rawQuery.trim()}\u201d.`;
+  }
+
+  return { visibleCards, matches };
+}
+
+/* ==========================================================================
  * Main audit flow
  * ========================================================================== */
 
@@ -553,6 +636,8 @@ async function runAudit() {
   el.notAuditable.hidden = true;
   el.summaryBadge.hidden = true;
   el.summaryText.textContent = '';
+  el.searchBar.hidden = true;
+  el.noResults.hidden = true;
   el.siteName.textContent = 'Loading…';
   el.siteUrl.hidden = true;
   el.favicon.hidden = true;
@@ -668,6 +753,11 @@ async function runAudit() {
   } else {
     summarize(settings, hostInfo);
   }
+
+  // 10. Show the filter bar only when there is something to filter, then
+  //     re-apply whatever is in the box (a revoke re-renders every row).
+  el.searchBar.hidden = el.categories.querySelector('.card') === null;
+  applyFilter(el.search.value);
 }
 
 /** Surface an unexpected failure in-band instead of a blank popup. */
@@ -678,6 +768,21 @@ function renderFatal(err) {
   banner.textContent = err?.message ?? String(err);
   el.categories.appendChild(banner);
 }
+
+/* Filter bar: live filtering as the user types (Esc clears natively too). */
+el.search.addEventListener('input', () => applyFilter(el.search.value));
+el.search.addEventListener('search', () => applyFilter(el.search.value));
+el.search.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && el.search.value) {
+    el.search.value = '';
+    applyFilter('');
+  }
+});
+el.searchClear.addEventListener('click', () => {
+  el.search.value = '';
+  applyFilter('');
+  el.search.focus();
+});
 
 /* Footer link: open Chrome's site settings in a new tab. */
 el.settingsLink.addEventListener('click', (e) => {

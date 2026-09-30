@@ -17,7 +17,7 @@ resolved through Chrome's local `favicon` API endpoint) and stores nothing.
 manifest.json            MV3 manifest (permissions, action, service worker)
 popup.html               Semantic popup markup (templates for cards/rows)
 popup.css                Card-based UI, CSS variables, automatic dark mode
-popup.js                 Audit logic + rendering (vanilla ES2022+)
+popup.js                 Audit logic + rendering + live row filter (ES2022+)
 background.js            Service worker: live toolbar badge for the active tab
 icons/
   generate-icons.mjs     Dev-time icon generator (node icons/generate-icons.mjs;
@@ -51,6 +51,12 @@ icons/
   animated chevron and a row-count pill. Collapsed state is stored per
   category id in `chrome.storage.local` (`collapsedCategories`) and restored
   on the next popup open; it degrades to in-memory only if storage fails.
+- A filter bar above the cards narrows the rows live as you type: each row
+  carries a lowercase search haystack (category title + label + effective
+  value + description), non-matching rows and cards with no matches are
+  hidden, matching cards expand for the duration of the search, and the count
+  pill switches to `matched/total`. The query is popup-local and never
+  persisted.
 
 ## The "chrome.siteSettings" question
 
@@ -112,6 +118,10 @@ change all your data" warning. `"minimum_chrome_version": "104"` reflects the
 - OS light/dark mode → popup follows automatically via `prefers-color-scheme`.
 - Collapse a category card → chevron rotates and the body animates shut;
   close and reopen the popup (or reload) → the same cards are still collapsed.
+- Type in the filter box → rows narrow instantly, empty cards disappear, the
+  count pill shows `matched/total`, and a "No permissions match …" line
+  appears when nothing hits; clearing the box (✕ or Esc) restores every row
+  and the previously collapsed cards.
 
 ## Notes and limits
 

@@ -21,6 +21,45 @@
     </header>
 
     <main id="content">
+      <!-- Live filter: narrows the permission rows as you type (popup.js) -->
+      <div class="search" id="searchBar" hidden>
+        <svg class="search__icon" viewBox="0 0 16 16" aria-hidden="true">
+          <circle
+            cx="7"
+            cy="7"
+            r="4.4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+          />
+          <path
+            d="M10.4 10.4 14 14"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+          />
+        </svg>
+        <input
+          id="permSearch"
+          class="search__input"
+          type="search"
+          placeholder="Filter permissions…"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="Filter permission rows"
+          aria-controls="categories"
+        />
+        <button
+          id="searchClear"
+          class="search__clear"
+          type="button"
+          aria-label="Clear filter"
+          hidden
+        >
+          ✕
+        </button>
+      </div>
+
       <!-- "All clear" state -->
       <section id="allClear" class="all-clear" hidden>
         <span class="all-clear__icon" aria-hidden="true">🛡️</span>
@@ -32,6 +71,9 @@
 
       <!-- Permission categories are rendered here by popup.js -->
       <div id="categories"></div>
+
+      <!-- Shown when a filter matches nothing -->
+      <p id="noResults" class="no-results" role="status" hidden></p>
 
       <!-- Shown only for chrome://, extension pages, etc. -->
       <section id="notAuditable" class="notice notice--warn" hidden>
