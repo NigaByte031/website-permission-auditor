@@ -1,5 +1,7 @@
 # Website Permission Auditor (Manifest V3)
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A privacy-focused Chrome extension that audits **the site in the active tab**
 and reports which capabilities it has been granted: camera, microphone,
 geolocation, notifications, clipboard, cookies, pop-ups, JavaScript, images,
@@ -120,3 +122,11 @@ change all your data" warning. `"minimum_chrome_version": "104"` reflects the
 - The badge inspects the four key types (camera, mic, location,
   notifications) to keep service-worker wake-ups cheap; the popup always
   audits the full list.
+
+## License
+
+Released under the [MIT License](LICENSE) © 2026 Mohammad Yazdani.
+
+You are free to use, modify and redistribute this project — including
+commercially — provided the copyright notice and permission notice are
+retained in all copies or substantial portions of the software.
