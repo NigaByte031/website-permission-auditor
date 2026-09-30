@@ -71,6 +71,24 @@
       html[data-color-mode='light'] .preview-note { color: #444b52; }
       html[data-color-mode='dark'] .preview-stage { background: #14161a; }
       html[data-color-mode='dark'] .preview-note { color: #aab2ba; }
+
+      /* Screenshot mode (?bare): show only the popup frame, edge to edge, so
+         a headless capture at 380x620 is exactly the popup with no chrome. */
+      html.is-bare .preview-stage {
+        min-height: 0;
+        gap: 0;
+        padding: 0;
+        place-items: start;
+        background: #fff;
+      }
+      html.is-bare .preview-controls,
+      html.is-bare .preview-note {
+        display: none;
+      }
+      html.is-bare .preview-frame {
+        border-radius: 0;
+        box-shadow: none;
+      }
     </style>
   </head>
   <body>
@@ -95,6 +113,16 @@
       // (the popup iframe) resolve `prefers-color-scheme` accordingly, so the
       // popup's automatic dark mode can be exercised without OS settings.
       const MODE_KEY = 'preview.colorMode';
+      const params = new URLSearchParams(location.search);
+
+      // "?bare" drops the harness chrome so the page is exactly the popup
+      // frame (used to capture README imagery); "?scheme=light|dark" forces a
+      // color scheme for one load without touching the persisted preference.
+      if (params.get('bare') !== null) {
+        document.documentElement.classList.add('is-bare');
+      }
+      const forcedScheme = params.get('scheme');
+
       const buttons = {
         auto: document.getElementById('schemeAuto'),
         light: document.getElementById('schemeLight'),
@@ -111,7 +139,9 @@
           btn.classList.toggle('scheme-btn--active', name === mode);
         }
         try {
-          localStorage.setItem(MODE_KEY, mode);
+          // A forced scheme (?scheme=…) is a one-off load; keep it out of the
+          // persisted preference so the next visit is unaffected.
+          if (!forcedScheme) localStorage.setItem(MODE_KEY, mode);
         } catch {
           /* storage may be unavailable - non-fatal */
         }
@@ -123,9 +153,9 @@
 
       let saved = 'auto';
       try {
-        saved = localStorage.getItem(MODE_KEY) ?? 'auto';
+        saved = forcedScheme ?? localStorage.getItem(MODE_KEY) ?? 'auto';
       } catch {
-        /* fall through to auto */
+        saved = forcedScheme ?? 'auto';
       }
       if (saved !== 'auto' && saved !== 'light' && saved !== 'dark') saved = 'auto';
       applyMode(saved);

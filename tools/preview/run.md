@@ -51,6 +51,24 @@ The harness has **Auto / ☀ Light / 🌙 Dark** buttons above the frame. Forcin
 exercised without touching OS settings. **Auto** follows the OS again; the
 choice persists in `localStorage` (`preview.colorMode`) across reloads.
 
+### Capturing a screenshot
+
+The harness has a **bare mode** for imagery: `?bare=1` hides the controls and
+the explanatory note so the page is exactly the popup frame, and
+`?scheme=light|dark` forces a colour scheme for that one load without touching
+the persisted preference. With the server running, capture at the popup's real
+380x620 size:
+
+```
+chrome --headless=new --hide-scrollbars --force-device-scale-factor=2 \
+  --window-size=380,620 --virtual-time-budget=4000 \
+  --screenshot=docs/popup.png "http://127.0.0.1:4173/?bare=1&scheme=light"
+```
+
+The `--force-device-scale-factor=2` yields a crisp 760x1240 PNG (the README
+hero). The harness fetches `popup.html` into the frame after load, so keep the
+`--virtual-time-budget` high enough for the audit to finish before the shot.
+
 To run the real extension instead: load this folder unpacked via
 `chrome://extensions` (see README.md).
 

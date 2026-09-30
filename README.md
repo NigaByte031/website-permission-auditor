@@ -23,6 +23,8 @@ nothing but one UI preference.
 | **Footprint** | No dependencies, no build step, no remote code |
 | **Docs** | [Privacy](PRIVACY.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) |
 
+![The popup auditing https://example.com: a summary tally with its granted/blocked/on-ask meter above rows that each offer Enable, Disable and Reset](docs/popup.png)
+
 ## Table of contents
 
 - [Features](#features)
@@ -204,6 +206,8 @@ icons/
   icon16.png icon48.png icon128.png   Generated toolbar/store icons
 scripts/
   validate.mjs           Dependency-free checks run by `npm test` and CI
+docs/
+  popup.png              README screenshot of the popup
 tools/preview/
   preview-server.mjs     Dependency-free static server for the popup preview
   preview.html           Harness page that frames the real popup
