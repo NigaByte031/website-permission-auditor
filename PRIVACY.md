@@ -45,8 +45,9 @@ extension removes it.
 - No page content is read: there are no content scripts and no `host_permissions`.
 - No history, bookmarks, downloads, tabs-from-other-windows or form data is read.
 - Nothing is sent anywhere — there is no server component.
-- No permissions are changed without your click; the **Revoke** button is the
-  only write path, and it applies to the site currently shown in the popup.
+- No permissions are changed without your click; the **Enable** / **Disable**
+  / **Reset** row actions are the only write paths, and each applies only to
+  the site currently shown in the popup.
 
 ## Permissions and why they are needed
 

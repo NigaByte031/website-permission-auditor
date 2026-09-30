@@ -29,7 +29,7 @@ nothing but one UI preference.
 - [Install](#install)
 - [How the audit works](#how-the-audit-works)
 - [The "chrome.siteSettings" question](#the-chromesitesettings-question)
-- [Revoke/reset semantics](#revokereset-semantics)
+- [Enable/disable/reset semantics](#enabledisablereset-semantics)
 - [Manifest permissions and why](#manifest-permissions-and-why)
 - [Privacy](#privacy)
 - [Compatibility](#compatibility)
@@ -47,10 +47,12 @@ nothing but one UI preference.
 - **Honest states.** Allowed / Ask (default) / Blocked / Allowed (this
   session) shown as tinted chips with a leading glyph, so status never depends
   on colour alone.
-- **One-click revoke.** Rows that differ from Chrome's default offer a
-  *Revoke* / *Reset to default* action scoped to that origin.
+- **Act on what you see.** Every row carries *Enable* / *Disable* buttons —
+  plus *Reset* when the row differs from Chrome's default — so a permission can
+  be changed, scoped to that origin, without leaving the popup.
 - **At-a-glance tally.** The header summarises the audit as
-  *granted / blocked / default* counts next to the summary badge.
+  *granted / blocked / on-ask* counts next to the summary badge, with a
+  proportional meter bar above them.
 - **Scannable at scale.** A live filter narrows rows as you type, hides empty
   cards and shows `matched/total` counts.
 - **Remembers your layout.** Collapsible category cards persist their
@@ -105,6 +107,13 @@ After editing `manifest.json`, press **Reload** on the extension card; edits to
   (✓ allowed, ? ask, ✕ blocked) so state reads without relying on color
   alone. A shimmer skeleton covers the first paint, and the header gains a
   shadow once content scrolls beneath it.
+- Rows are interactive. *Enable* / *Disable* write the matching value for the
+  origin and *Reset* writes the type's documented default, all through
+  `chrome.contentSettings.<type>.set()`, then the popup re-audits so every chip
+  reflects the new effective state. The `__host__` row drives
+  `chrome.permissions.request()` / `.remove()` instead. All glyphs are inline
+  SVG that inherit `currentColor`, so the UI looks identical on every platform
+  and a status class can tint a glyph by swapping one colour token.
 
 ## The "chrome.siteSettings" question
 
@@ -128,15 +137,24 @@ unlocked by the `"contentSettings"` manifest permission. This extension
 therefore uses `chrome.contentSettings` and keeps a runtime guard so it
 degrades gracefully (error banner, not a crash) if the API is ever missing.
 
-## Revoke/reset semantics
+## Enable/disable/reset semantics
 
 `ContentSetting.clear()` only clears **all** rules of a type for every site —
-it has no per-origin form — so "Revoke" here writes Chrome's documented
-default for that type back onto the origin via `set()`
-(`primaryPattern: "https://example.com/*"`): `ask` for camera, microphone,
-location, notifications, clipboard and automatic downloads; `allow` for
-cookies, JavaScript, images and sound; `block` for pop-ups. The button only
-appears when the current setting differs from that default.
+it has no per-origin form — so the row actions write values per origin through
+`set({ primaryPattern: "https://example.com/*", setting })`:
+
+- **Enable** writes `allow`; **Disable** writes `block`.
+- **Reset** — shown only when the row differs from Chrome's default — writes
+  that documented default back onto the origin: `ask` for camera, microphone,
+  location, notifications, clipboard and automatic downloads; `allow` for
+  cookies, JavaScript, images and sound; `block` for pop-ups.
+- The `__host__` row has no contentSetting of its own: there **Enable** calls
+  `chrome.permissions.request({ origins: [...] })` and **Disable** calls
+  `chrome.permissions.remove({ origins: [...] })`.
+
+The button matching a row's current state is highlighted (and mirrored in
+`aria-pressed`), so each row reads as a toggle. A write that Chrome refuses is
+surfaced as "Failed - retry" on the button plus a console warning.
 
 ## Manifest permissions and why
 
@@ -186,6 +204,11 @@ icons/
   icon16.png icon48.png icon128.png   Generated toolbar/store icons
 scripts/
   validate.mjs           Dependency-free checks run by `npm test` and CI
+tools/preview/
+  preview-server.mjs     Dependency-free static server for the popup preview
+  preview.html           Harness page that frames the real popup
+  chrome-mock.js         Preview-only chrome.* mock (mixed permission states)
+  run.md                 How to run and use the preview
 .github/
   workflows/ci.yml       Validate on every push and pull request
   workflows/release.yml  Zip the extension and publish a release on v* tags
@@ -198,9 +221,14 @@ npm test     # validate manifest, JS syntax, popup assets and the offline guaran
 npm run icons  # regenerate the toolbar/store icons
 ```
 
+To iterate on the UI without loading the extension into Chrome, run
+`node tools/preview/preview-server.mjs 4173` and open `http://127.0.0.1:4173/`; the
+harness frames the real `popup.html` / `popup.css` / `popup.js` against a mocked
+`chrome.*` API with mixed permission states. See [`tools/preview/run.md`](tools/preview/run.md).
+
 `npm test` needs no installation: there are no dependencies, and
 `scripts/validate.mjs` uses only Node's standard library. Releases are cut by
-pushing a tag that matches `manifest.json` (`v1.0.0`); the release workflow
+pushing a tag that matches `manifest.json` (`v1.1.0`); the release workflow
 validates, packages a store-ready zip and attaches it to the GitHub release.
 
 Conventions and PR expectations live in [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -209,7 +237,8 @@ Conventions and PR expectations live in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - Regular site: rows show Allowed / Ask (default) / Blocked correctly.
 - Grant a permission (e.g. camera on a test site) → badge shows green `1`,
-  popup shows "Revoke" for that row; clicking it returns the row to
+  the row highlights *Disable* and offers *Reset*; clicking *Disable* turns the
+  row Blocked (badge flips to red `!`), and *Reset* returns it to
   "Ask (default)".
 - Block a type globally (`chrome://settings/content/cookies` → "Don't allow
   sites to use cookies") → popup shows Blocked rows; badge shows red `!`.

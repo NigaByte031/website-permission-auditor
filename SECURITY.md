@@ -4,6 +4,7 @@
 
 | Version | Supported |
 |---|---|
+| 1.1.x | ✅ |
 | 1.0.x | ✅ |
 | < 1.0 | ❌ |
 
@@ -32,7 +33,8 @@ reporter, unless you prefer to stay anonymous.
 In scope:
 
 - Permission state being misreported (e.g. "Allowed" while the site is blocked).
-- The **Revoke** action changing settings for a site other than the one shown.
+- The **Enable** / **Disable** / **Reset** actions changing settings for a
+  site other than the one shown.
 - Any code path that could transmit data off the device — the extension is
   designed to make **no network requests**, and CI enforces that statically.
 - Any way to make the popup or service worker execute remotely supplied code.

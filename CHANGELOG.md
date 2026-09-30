@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-01
+
+### Added
+
+- Per-row **Enable** / **Disable** actions that write `allow` / `block` for the
+  audited origin through `chrome.contentSettings`, plus a **Reset** action that
+  restores Chrome's documented default for the type. Rows now read as toggles:
+  the active state is highlighted and mirrored in `aria-pressed`.
+- The host-access row can now **grant** this extension's access to the origin
+  via `chrome.permissions.request()`, not just remove it.
+- Header redesign: a site avatar that falls back to a letter tile until the
+  favicon decodes, and a proportional granted/blocked/on-ask meter above the
+  tally.
+- Hand-rolled inline SVG icons for every category and row, replacing platform
+  emoji so the UI renders identically everywhere and inherits the status tint.
+- Local preview harness (`tools/preview/`) that frames the real popup against a
+  mocked `chrome.*` API, so the UI can be iterated on without loading the
+  extension into Chrome.
+
+### Changed
+
+- Documentation updated for the new row actions: README semantics section,
+  privacy and security statements.
+
 ## [1.0.0] - 2026-09-30
 
 ### Added
@@ -34,5 +58,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   enforces the manifest, syntax, popup assets and the offline guarantee, plus
   CI and tag-driven release workflows.
 
-[Unreleased]: https://github.com/NigaByte031/website-permission-auditor/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/NigaByte031/website-permission-auditor/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/NigaByte031/website-permission-auditor/releases/tag/v1.1.0
 [1.0.0]: https://github.com/NigaByte031/website-permission-auditor/releases/tag/v1.0.0

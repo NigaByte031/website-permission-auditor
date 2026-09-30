@@ -1,6 +1,6 @@
 {
   "name": "website-permission-auditor",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Privacy-focused Chrome extension (MV3) that audits the active site's permissions: camera, microphone, location, notifications, clipboard, cookies and host access.",
   "license": "MIT",
