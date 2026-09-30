@@ -374,6 +374,12 @@ const el = {
   search: document.getElementById('permSearch'),
   searchClear: document.getElementById('searchClear'),
   noResults: document.getElementById('noResults'),
+  statStrip: document.getElementById('statStrip'),
+  statGranted: document.getElementById('statGranted'),
+  statBlocked: document.getElementById('statBlocked'),
+  statDefault: document.getElementById('statDefault'),
+  skeleton: document.getElementById('skeleton'),
+  versionChip: document.getElementById('versionChip'),
   siteUrl: document.getElementById('siteUrl'),
   favicon: document.getElementById('favicon'),
   summaryBadge: document.getElementById('summaryBadge'),
@@ -531,18 +537,38 @@ function renderCategory(cat, target, settings) {
 }
 
 /**
+ * Bucket every audited setting into the three header tallies:
+ * granted (allow / session_only), blocked, and default (ask / everything
+ * else that resolved). Unknown rows are ignored so the tally stays honest.
+ */
+function tallySettings(settings, hostInfo) {
+  let granted = 0;
+  let blocked = 0;
+  let dflt = 0;
+  for (const entry of settings.values()) {
+    const s = entry?.setting;
+    if (!s || s === 'unknown') continue;
+    if (GRANTED_SETTINGS.has(s)) granted++;
+    else if (s === 'block') blocked++;
+    else dflt++;
+  }
+  if (hostInfo.hasAny) granted++;
+  return { granted, blocked, dflt };
+}
+
+/** Paint the at-a-glance tally in the header. */
+function renderStats({ granted, blocked, dflt }) {
+  el.statGranted.textContent = String(granted);
+  el.statBlocked.textContent = String(blocked);
+  el.statDefault.textContent = String(dflt);
+  el.statStrip.hidden = granted + blocked + dflt === 0;
+}
+
+/**
  * Header badge + summary line once anything notable was found.
  */
 function summarize(settings, hostInfo) {
-  let granted = 0;
-  let restricted = 0;
-  for (const entry of settings.values()) {
-    const s = entry?.setting;
-    if (!s) continue;
-    if (GRANTED_SETTINGS.has(s)) granted++;
-    else if (s === 'block') restricted++;
-  }
-  if (hostInfo.hasAny) granted++;
+  const { granted } = tallySettings(settings, hostInfo);
 
   const badge = el.summaryBadge;
   if (granted > 0) {
@@ -638,6 +664,7 @@ async function runAudit() {
   el.summaryText.textContent = '';
   el.searchBar.hidden = true;
   el.noResults.hidden = true;
+  el.statStrip.hidden = true;
   el.siteName.textContent = 'Loading…';
   el.siteUrl.hidden = true;
   el.favicon.hidden = true;
@@ -677,6 +704,7 @@ async function runAudit() {
     el.notAuditableReason.textContent = isExtensionPage
       ? 'This tab is an extension or browser page, so it has no per-site permissions to audit.'
       : 'This tab is not a regular website, so it has no per-site permissions to audit.';
+    el.skeleton.hidden = true;
     el.notAuditable.hidden = false;
     return;
   }
@@ -715,6 +743,9 @@ async function runAudit() {
     auditHostPermissions(target.pattern),
   ]);
 
+  // 6.5 First real paint: the skeleton has done its job.
+  el.skeleton.hidden = true;
+
   // 7. Extension host access card (only when a grant actually exists).
   if (hostInfo.hasAny) {
     renderCategory(
@@ -741,7 +772,10 @@ async function runAudit() {
   // 8. Render the data categories.
   for (const cat of CATEGORIES) renderCategory(cat, target, settings);
 
-  // 9. Summary: friendly "all clear" unless something notable was found.
+  // 9. Header tally + summary: friendly "all clear" unless something
+  //    notable was found (the tally is shown either way).
+  renderStats(tallySettings(settings, hostInfo));
+
   const anyGranted = [...settings.values()].some(
     (e) => e?.setting && GRANTED_SETTINGS.has(e.setting)
   );
@@ -762,12 +796,27 @@ async function runAudit() {
 
 /** Surface an unexpected failure in-band instead of a blank popup. */
 function renderFatal(err) {
+  el.skeleton.hidden = true;
   el.siteName.textContent = 'Unable to audit';
   const banner = document.createElement('div');
   banner.className = 'error-banner';
   banner.textContent = err?.message ?? String(err);
   el.categories.appendChild(banner);
 }
+
+/* Footer: show the running extension version, when available. */
+const version = chrome.runtime?.getManifest?.()?.version;
+if (version) {
+  el.versionChip.textContent = `v${version}`;
+  el.versionChip.hidden = false;
+}
+
+/* Header gets a shadow once content scrolls underneath it. */
+function syncScrollShadow() {
+  document.body.classList.toggle('is-scrolled', window.scrollY > 2);
+}
+window.addEventListener('scroll', syncScrollShadow, { passive: true });
+syncScrollShadow();
 
 /* Filter bar: live filtering as the user types (Esc clears natively too). */
 el.search.addEventListener('input', () => applyFilter(el.search.value));

@@ -92,6 +92,19 @@
     --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
     --shadow-md: 0 2px 6px rgb(0 0 0 / 0.45), 0 12px 32px rgb(0 0 0 / 0.5);
   }
+
+  body.is-scrolled .header {
+    box-shadow: 0 8px 20px rgb(0 0 0 / 0.5);
+  }
+}
+
+html {
+  /*
+   * The popup body has a fixed width, so the classic vertical scrollbar must
+   * not add a phantom horizontal scroll. `clip` (not `hidden`) avoids creating
+   * a scroll container, which would break the sticky header.
+   */
+  overflow-x: clip;
 }
 
 * {
@@ -142,25 +155,17 @@ button {
   display: none !important;
 }
 
-/* ===== Slim floating scrollbar ===== */
+/*
+ * ===== Scrollbar =====
+ * The popup body is a fixed width, so a classic space-taking scrollbar would
+ * overflow the viewport by its own width (and trigger a horizontal scrollbar).
+ * Hiding it frees that space; the sticky header's shadow plus the sticky
+ * footer signal that there is more content, matching overlay-scrollbar
+ * platforms.
+ */
 ::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  background-clip: padding-box;
-  border: 3px solid transparent;
-  border-radius: 999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-faint);
-  background-clip: padding-box;
+  width: 0;
+  height: 0;
 }
 
 /* ===== Header: frosted glass, content scrolls underneath ===== */
@@ -173,6 +178,12 @@ button {
   -webkit-backdrop-filter: blur(14px) saturate(1.4);
   backdrop-filter: blur(14px) saturate(1.4);
   border-bottom: 1px solid var(--border);
+  transition: box-shadow 0.2s ease;
+}
+
+/* Lifts the header off the content as soon as the page scrolls. */
+body.is-scrolled .header {
+  box-shadow: 0 8px 20px rgb(15 23 42 / 0.08);
 }
 
 .header__row {
@@ -227,6 +238,7 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  font-variant-numeric: tabular-nums;
   padding: 4px 10px 4px 8px;
   border-radius: 999px;
   font-size: 11px;
@@ -261,10 +273,53 @@ button {
   border: 1px solid var(--deny-border);
 }
 
+/* ===== Header tally (granted / blocked / default) ===== */
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+}
+
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 7px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+}
+
+.stat__dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+}
+
+.stat__count {
+  font-weight: 700;
+}
+
+.stat--granted .stat__dot { background: var(--ok); }
+.stat--blocked .stat__dot { background: var(--deny); }
+.stat--default .stat__dot { background: var(--warn); }
+
+.stat--granted .stat__count { color: var(--ok); }
+.stat--blocked .stat__count { color: var(--deny); }
+.stat--default .stat__count { color: var(--warn); }
+
 .header__summary {
-  margin: 10px 2px 0;
+  margin: 9px 2px 0;
   color: var(--text-muted);
   font-size: 12px;
+  text-wrap: pretty;
 }
 
 /* ===== Main layout: pin footer to the bottom on short pages ===== */
@@ -274,6 +329,59 @@ main {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* ===== Loading skeleton (hidden as soon as the audit renders) ===== */
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton__card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.skeleton__row,
+.skeleton__line {
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--surface-2),
+    var(--surface-3),
+    var(--surface-2)
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton__row {
+  height: 32px;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton__line {
+  height: 11px;
+}
+
+.skeleton__line--wide {
+  width: 72%;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
 }
 
 /* ===== Filter bar ===== */
@@ -361,6 +469,12 @@ main {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
 }
 
 /*
@@ -421,6 +535,7 @@ main {
 .card__count {
   font-size: 10.5px;
   font-weight: 650;
+  font-variant-numeric: tabular-nums;
   color: var(--text-faint);
   background: var(--surface-3);
   border: 1px solid var(--border);
@@ -545,7 +660,7 @@ main {
 
 .perm__row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
@@ -555,33 +670,76 @@ main {
   letter-spacing: -0.01em;
 }
 
+/*
+ * Status chip: a tinted pill with a leading glyph, so the state of every row
+ * reads at a glance instead of relying on color alone.
+ */
 .perm__value {
-  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 10.5px;
   font-weight: 650;
+  letter-spacing: 0.01em;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.perm__value::before {
+  font-size: 9px;
+  line-height: 1;
 }
 
 .perm__value--ok {
   color: var(--ok);
+  background: var(--ok-bg);
+  border-color: var(--ok-border);
+}
+
+.perm__value--ok::before {
+  content: '✓';
 }
 
 .perm__value--warn {
   color: var(--warn);
+  background: var(--warn-bg);
+  border-color: var(--warn-border);
+}
+
+.perm__value--warn::before {
+  content: '?';
 }
 
 .perm__value--deny {
   color: var(--deny);
+  background: var(--deny-bg);
+  border-color: var(--deny-border);
+}
+
+.perm__value--deny::before {
+  content: '✕';
 }
 
 .perm__value--neutral {
   color: var(--neutral);
+  background: var(--neutral-bg);
+  border-color: var(--neutral-border);
+}
+
+.perm__value--neutral::before {
+  content: '•';
 }
 
 .perm__detail {
   display: block;
-  margin-top: 2px;
+  margin-top: 3px;
   color: var(--text-faint);
   font-size: 11px;
+  text-wrap: pretty;
 }
 
 .perm__revoke {
@@ -692,6 +850,20 @@ main {
   color: var(--text-faint);
 }
 
+.footer__version {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  vertical-align: 1px;
+}
+
 .footer__link {
   color: var(--accent);
   text-decoration: none;
@@ -727,5 +899,13 @@ main {
       opacity: 1;
       transform: none;
     }
+  }
+}
+
+/* Motion-sensitive users get the skeleton without the sweep. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton__row,
+  .skeleton__line {
+    animation: none;
   }
 }

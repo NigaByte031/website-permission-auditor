@@ -17,10 +17,40 @@
         </div>
         <span id="summaryBadge" class="badge" hidden></span>
       </div>
+
+      <!-- At-a-glance tally of the audit (populated by popup.js) -->
+      <div class="stats" id="statStrip" hidden>
+        <span class="stat stat--granted">
+          <span class="stat__dot" aria-hidden="true"></span>
+          <span class="stat__count" id="statGranted">0</span> granted
+        </span>
+        <span class="stat stat--blocked">
+          <span class="stat__dot" aria-hidden="true"></span>
+          <span class="stat__count" id="statBlocked">0</span> blocked
+        </span>
+        <span class="stat stat--default">
+          <span class="stat__dot" aria-hidden="true"></span>
+          <span class="stat__count" id="statDefault">0</span> default
+        </span>
+      </div>
+
       <p id="summaryText" class="header__summary"></p>
     </header>
 
     <main id="content">
+      <!-- Shown until the first audit render lands (popup.js hides it) -->
+      <div class="skeleton" id="skeleton" aria-hidden="true">
+        <div class="skeleton__card">
+          <span class="skeleton__row"></span>
+          <span class="skeleton__line skeleton__line--wide"></span>
+          <span class="skeleton__line"></span>
+        </div>
+        <div class="skeleton__card">
+          <span class="skeleton__row"></span>
+          <span class="skeleton__line skeleton__line--wide"></span>
+        </div>
+      </div>
+
       <!-- Live filter: narrows the permission rows as you type (popup.js) -->
       <div class="search" id="searchBar" hidden>
         <svg class="search__icon" viewBox="0 0 16 16" aria-hidden="true">
@@ -86,8 +116,11 @@
     </main>
 
     <footer class="footer">
-      <span class="footer__hint">Audits only this tab's site settings.</span>
-      <a id="chromeSettingsLink" class="footer__link" href="#">Open Chrome site settings ↗</a>
+      <span class="footer__hint">
+        Audits only this tab's site settings.
+        <span class="footer__version" id="versionChip" hidden></span>
+      </span>
+      <a id="chromeSettingsLink" class="footer__link" href="#">Open Chrome settings ↗</a>
     </footer>
 
     <template id="tpl-category">
