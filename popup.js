@@ -40,28 +40,134 @@
  * @property {string}  cs        chrome.contentSettings property name, or a
  *                               pseudo-key like "__host__".
  * @property {string}  label     Row label.
- * @property {string}  icon      Emoji shown in the row glyph.
+ * @property {string}  icon      Key into ICONS for the row glyph.
  * @property {string}  detail    What the setting covers.
  * @property {boolean} [revoke]  Show a revoke/reset action (default true).
  */
+
+/* ==========================================================================
+ * Icons
+ * ==========================================================================
+ * Hand-rolled 24x24 stroke icons (Lucide-ish geometry) instead of emoji, so
+ * the popup renders identically on every platform and the line weight matches
+ * the interface type. Everything inherits `currentColor`, which lets the
+ * status classes tint a glyph by swapping one colour token.
+ *
+ * These are static, developer-authored strings - no user data is ever
+ * interpolated into markup, so assigning them via innerHTML stays within
+ * MV3's CSP and is safe.
+ */
+
+/** Wrap icon bodies in one consistent <svg> shell. */
+const icon = (body) =>
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+  'stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" ' +
+  'aria-hidden="true" focusable="false">' +
+  body +
+  '</svg>';
+
+/** Category + row glyphs, keyed by the `icon` field of a spec. */
+const ICONS = {
+  // Categories
+  chip: icon(
+    '<rect x="7.5" y="7.5" width="9" height="9" rx="2.4"/>' +
+      '<path d="M10 3.2v4.3M14 3.2v4.3M10 16.5v4.3M14 16.5v4.3M3.2 10h4.3M3.2 14h4.3M16.5 10h4.3M16.5 14h4.3"/>'
+  ),
+  pin: icon(
+    '<path d="M12 21.4c3.9-4.1 6.8-7.5 6.8-10.8a6.8 6.8 0 1 0-13.6 0c0 3.3 2.9 6.7 6.8 10.8Z"/>' +
+      '<circle cx="12" cy="10.2" r="2.6"/>'
+  ),
+  bell: icon(
+    '<path d="M18 9.2a6 6 0 0 0-12 0c0 4.6-1.7 6.2-2.3 6.8a.7.7 0 0 0 .5 1.2h15.6a.7.7 0 0 0 .5-1.2c-.6-.6-2.3-2.2-2.3-6.8Z"/>' +
+      '<path d="M10 20.1a2.2 2.2 0 0 0 4 0"/>'
+  ),
+  database: icon(
+    '<ellipse cx="12" cy="6" rx="7.4" ry="3.2"/>' +
+      '<path d="M4.6 6v12c0 1.8 3.3 3.2 7.4 3.2s7.4-1.4 7.4-3.2V6"/>' +
+      '<path d="M4.6 12c0 1.8 3.3 3.2 7.4 3.2s7.4-1.4 7.4-3.2"/>'
+  ),
+  globe: icon(
+    '<circle cx="12" cy="12" r="9.2"/>' +
+      '<path d="M2.8 12h18.4"/>' +
+      '<path d="M12 2.8c2.6 2.6 4 5.7 4 9.2s-1.4 6.6-4 9.2c-2.6-2.6-4-5.7-4-9.2s1.4-6.6 4-9.2Z"/>'
+  ),
+  link: icon(
+    '<path d="M9.6 14.4a4.1 4.1 0 0 1 0-5.8l2.9-2.9a4.1 4.1 0 0 1 5.8 5.8l-1.4 1.4"/>' +
+      '<path d="M14.4 9.6a4.1 4.1 0 0 1 0 5.8l-2.9 2.9a4.1 4.1 0 0 1-5.8-5.8l1.4-1.4"/>'
+  ),
+
+  // Rows
+  camera: icon(
+    '<rect x="2.6" y="6.6" width="18.8" height="13" rx="3.4"/>' +
+      '<circle cx="12" cy="13.1" r="3.5"/>' +
+      '<path d="M9 6.6 10.1 3.9h3.8l1.1 2.7"/>'
+  ),
+  microphone: icon(
+    '<rect x="9" y="2.6" width="6" height="10.8" rx="3"/>' +
+      '<path d="M5.6 11.4a6.4 6.4 0 0 0 12.8 0"/>' +
+      '<path d="M12 17.8v3.6"/>'
+  ),
+  clipboard: icon(
+    '<rect x="4.6" y="4.2" width="14.8" height="17.4" rx="3.4"/>' +
+      '<path d="M9 4.2V3.1A1.3 1.3 0 0 1 10.3 1.8h3.4A1.3 1.3 0 0 1 15 3.1v1.1"/>' +
+      '<path d="M8.6 11.4h6.8M8.6 15.4h4.6"/>'
+  ),
+  cookie: icon(
+    '<path d="M12 2.6a9.4 9.4 0 1 0 9.4 9.4 4.3 4.3 0 0 1-5.2-5.2A4.6 4.6 0 0 1 12 2.6Z"/>' +
+      '<circle cx="9" cy="9.6" r="1"/>' +
+      '<circle cx="14.4" cy="14.4" r="1"/>' +
+      '<circle cx="9.6" cy="15" r="1"/>'
+  ),
+  download: icon(
+    '<path d="M12 3.4v11"/>' +
+      '<path d="m7.8 10.3 4.2 4.2 4.2-4.2"/>' +
+      '<path d="M4 20.2h16"/>'
+  ),
+  code: icon(
+    '<path d="m9.2 8-4.4 4 4.4 4"/>' + '<path d="m14.8 8 4.4 4-4.4 4"/>'
+  ),
+  image: icon(
+    '<rect x="3" y="4.6" width="18" height="14.8" rx="3.4"/>' +
+      '<circle cx="8.6" cy="10" r="1.6"/>' +
+      '<path d="M3.6 17.6 8 13.2a1.9 1.9 0 0 1 2.7 0l3.1 3.1"/>' +
+      '<path d="m13.6 15.4 1.5-1.5a1.9 1.9 0 0 1 2.7 0l2.4 2.4"/>'
+  ),
+  volume: icon(
+    '<path d="M11.6 4.4 7 8.2H3.6v7.6H7l4.6 3.8V4.4Z"/>' +
+      '<path d="M15.8 9.2a4.2 4.2 0 0 1 0 5.6"/>' +
+      '<path d="M18.6 6.4a8 8 0 0 1 0 11.2"/>'
+  ),
+  window: icon(
+    '<rect x="3" y="4.6" width="18" height="14.8" rx="3.4"/>' +
+      '<path d="M3 9.6h18"/>' +
+      '<path d="M6.6 7.1h.01M9.6 7.1h.01"/>'
+  ),
+
+  // Fallbacks
+  shield: icon(
+    '<path d="M12 2.6 4.8 5.6v6c0 4.9 3 8.6 7.2 9.9 4.2-1.3 7.2-5 7.2-9.9v-6L12 2.6Z"/>' +
+      '<path d="m8.8 11.9 2.3 2.3 4.3-4.6"/>'
+  ),
+  dot: icon('<circle cx="12" cy="12" r="3.4"/>'),
+};
 
 /** @type {Array<{id:string,title:string,icon:string,items:PermSpec[]}>} */
 const CATEGORIES = [
   {
     id: 'hardware',
     title: 'Hardware',
-    icon: '🎥',
+    icon: 'chip',
     items: [
       {
         cs: 'camera',
         label: 'Camera',
-        icon: '📷',
+        icon: 'camera',
         detail: 'Use your camera to capture video.',
       },
       {
         cs: 'microphone',
         label: 'Microphone',
-        icon: '🎤',
+        icon: 'microphone',
         detail: 'Use your microphone to capture audio.',
       },
     ],
@@ -69,12 +175,12 @@ const CATEGORIES = [
   {
     id: 'location',
     title: 'Location',
-    icon: '📍',
+    icon: 'pin',
     items: [
       {
         cs: 'location',
         label: 'Geolocation',
-        icon: '🧭',
+        icon: 'pin',
         detail: 'Read your physical location.',
       },
     ],
@@ -82,12 +188,12 @@ const CATEGORIES = [
   {
     id: 'notifications',
     title: 'Notifications',
-    icon: '🔔',
+    icon: 'bell',
     items: [
       {
         cs: 'notifications',
         label: 'Notifications',
-        icon: '🔔',
+        icon: 'bell',
         detail: 'Show desktop notifications.',
       },
     ],
@@ -95,24 +201,24 @@ const CATEGORIES = [
   {
     id: 'data',
     title: 'Data & Clipboard',
-    icon: '🍪',
+    icon: 'database',
     items: [
       {
         cs: 'clipboard',
         label: 'Clipboard',
-        icon: '📋',
+        icon: 'clipboard',
         detail: 'Use advanced clipboard capabilities (read, custom writes).',
       },
       {
         cs: 'cookies',
         label: 'Cookies & site data',
-        icon: '🍪',
+        icon: 'cookie',
         detail: 'Store cookies and other local data.',
       },
       {
         cs: 'automaticDownloads',
         label: 'Automatic downloads',
-        icon: '⬇️',
+        icon: 'download',
         detail: 'Download multiple files without asking each time.',
       },
     ],
@@ -120,30 +226,30 @@ const CATEGORIES = [
   {
     id: 'host',
     title: 'Site Data / Host Access',
-    icon: '🌐',
+    icon: 'globe',
     items: [
       {
         cs: 'javascript',
         label: 'JavaScript',
-        icon: '⚙️',
+        icon: 'code',
         detail: 'Run JavaScript on this site.',
       },
       {
         cs: 'images',
         label: 'Images',
-        icon: '🖼️',
+        icon: 'image',
         detail: 'Load and display images.',
       },
       {
         cs: 'sound',
         label: 'Sound',
-        icon: '🔊',
+        icon: 'volume',
         detail: 'Play audio without being muted.',
       },
       {
         cs: 'popups',
         label: 'Pop-ups',
-        icon: '🪟',
+        icon: 'window',
         detail: 'Open new browser windows and tabs.',
       },
     ],
@@ -172,10 +278,10 @@ const GRANTED_SETTINGS = new Set(['allow', 'session_only']);
 
 /**
  * Chrome's built-in default for each content type (from the API schema).
- * "Revoking" a setting means writing the default back for this origin via
+ * "Resetting" a setting means writing the default back for this origin via
  * set(), because ContentSetting.clear() only clears ALL rules of a type -
  * it has no per-origin form. Types whose default is 'ask' return to the
- * "ask every time" behavior, which is what users expect from "Revoke".
+ * "ask every time" behavior, which is what users expect from "Reset".
  */
 const REVOCATION_DEFAULT = {
   camera: 'ask',
@@ -378,9 +484,14 @@ const el = {
   statGranted: document.getElementById('statGranted'),
   statBlocked: document.getElementById('statBlocked'),
   statDefault: document.getElementById('statDefault'),
+  meter: document.getElementById('meter'),
+  meterGranted: document.getElementById('meterGranted'),
+  meterBlocked: document.getElementById('meterBlocked'),
+  meterDefault: document.getElementById('meterDefault'),
   skeleton: document.getElementById('skeleton'),
   versionChip: document.getElementById('versionChip'),
   siteUrl: document.getElementById('siteUrl'),
+  siteInitial: document.getElementById('siteInitial'),
   favicon: document.getElementById('favicon'),
   summaryBadge: document.getElementById('summaryBadge'),
   summaryText: document.getElementById('summaryText'),
@@ -392,6 +503,36 @@ const el = {
   tplCategory: document.getElementById('tpl-category'),
   tplItem: document.getElementById('tpl-item'),
 };
+
+/* ==========================================================================
+ * Site avatar
+ * ==========================================================================
+ * The favicon endpoint resolves asynchronously and may fail (no icon, cache
+ * miss, unsupported scheme), so a letter tile sits underneath from the first
+ * paint and only steps aside once a real image has decoded.
+ */
+
+/** Swap the avatar to the letter fallback for a hostname/label. */
+function showInitial(label) {
+  const letter = (label ?? '').match(/[a-z0-9]/i)?.[0];
+  el.siteInitial.textContent = letter ? letter.toUpperCase() : '\u00b7';
+  el.siteInitial.hidden = false;
+  el.favicon.hidden = true;
+}
+
+/** Hide the letter tile once the favicon has painted. */
+el.favicon.addEventListener('load', () => {
+  // A hidden <img> still fires `load` with an empty src in some Chrome
+  // builds; only trust a load that produced intrinsic dimensions.
+  if (!el.favicon.naturalWidth) return;
+  el.favicon.hidden = false;
+  el.siteInitial.hidden = true;
+});
+
+el.favicon.addEventListener('error', () => {
+  el.favicon.hidden = true;
+  el.siteInitial.hidden = false;
+});
 
 /**
  * Build one permission row.
@@ -405,7 +546,7 @@ function renderPermItem(parent, spec, setting, target) {
   const info = SETTING_LABELS[setting] ?? { text: 'Unknown', cls: 'neutral' };
 
   const glyph = node.querySelector('.perm__glyph');
-  glyph.textContent = spec.icon;
+  glyph.innerHTML = ICONS[spec.icon] ?? ICONS.dot;
   glyph.classList.add(`perm__glyph--${info.cls}`);
 
   node.querySelector('.perm__name').textContent = spec.label;
@@ -414,29 +555,54 @@ function renderPermItem(parent, spec, setting, target) {
   value.classList.add(`perm__value--${info.cls}`);
   node.querySelector('.perm__detail').textContent = spec.detail;
 
-  // Action button: only when the current setting differs from Chrome's
-  // default for that type (otherwise there is nothing to revoke) and the
-  // spec allows it. For pseudo-keys like __host__ the button is wired to
-  // chrome.permissions instead of contentSettings.
-  const revokeTo = REVOCATION_DEFAULT[spec.cs];
-  const differsFromDefault =
-    revokeTo !== undefined && setting !== revokeTo && setting !== 'unknown';
+  // Action controls: "Enable" writes allow, "Disable" writes block, and
+  // "Reset" restores Chrome's default for the type. The button matching the
+  // current state is highlighted (is-active + aria-pressed) so each row
+  // doubles as a toggle, not just a status readout. For pseudo-keys like
+  // __host__ the buttons drive chrome.permissions instead of contentSettings.
   const isHostRow = spec.cs === '__host__';
-  const revokeBtn = node.querySelector('.perm__revoke');
+  const known = setting !== 'unknown';
+  const granted = GRANTED_SETTINGS.has(setting);
+  const blocked = setting === 'block';
+
+  const allowBtn = node.querySelector('[data-action="allow"]');
+  const blockBtn = node.querySelector('[data-action="block"]');
+  const resetBtn = node.querySelector('[data-action="reset"]');
+
+  allowBtn.setAttribute('aria-pressed', String(granted));
+  blockBtn.setAttribute('aria-pressed', String(blocked));
+  allowBtn.classList.toggle('is-active', granted);
+  blockBtn.classList.toggle('is-active', blocked);
+
   if (isHostRow) {
-    // Host access is revoked via chrome.permissions.remove (see resetSetting).
-    revokeBtn.hidden = false;
-    revokeBtn.textContent = 'Remove access';
-    revokeBtn.addEventListener('click', () =>
-      resetSetting(spec, target, revokeBtn)
+    // This extension's own host access: Enable asks for the origin, Disable
+    // removes it (both handled by applySetting via chrome.permissions).
+    allowBtn.disabled = granted;
+    blockBtn.disabled = !granted;
+    blockBtn.classList.toggle('is-active', !granted);
+    allowBtn.addEventListener('click', () =>
+      applySetting(spec, target, 'allow', allowBtn)
     );
-  } else if (spec.revoke !== false && differsFromDefault) {
-    revokeBtn.hidden = false;
-    revokeBtn.textContent = GRANTED_SETTINGS.has(setting)
-      ? 'Revoke'
-      : 'Reset to default';
-    revokeBtn.addEventListener('click', () =>
-      resetSetting(spec, target, revokeBtn)
+    blockBtn.addEventListener('click', () =>
+      applySetting(spec, target, 'block', blockBtn)
+    );
+  } else {
+    allowBtn.disabled = !known;
+    blockBtn.disabled = !known;
+    allowBtn.addEventListener('click', () =>
+      applySetting(spec, target, 'allow', allowBtn)
+    );
+    blockBtn.addEventListener('click', () =>
+      applySetting(spec, target, 'block', blockBtn)
+    );
+
+    // Reset is offered only when the row can move back to its default and is
+    // not already there.
+    const dflt = REVOCATION_DEFAULT[spec.cs];
+    resetBtn.hidden =
+      spec.revoke === false || dflt === undefined || !known || setting === dflt;
+    resetBtn.addEventListener('click', () =>
+      applySetting(spec, target, dflt, resetBtn)
     );
   }
 
@@ -449,23 +615,41 @@ function renderPermItem(parent, spec, setting, target) {
 }
 
 /**
- * Write Chrome's default setting for this type back onto the origin, which
- * is the per-origin equivalent of "revoke". ContentSetting.clear() cannot be
- * used because it drops every rule of that type for every site.
+ * Apply a new state to one permission row, then re-audit.
+ *
+ * `value` is a contentSettings setting ('allow' | 'block' | 'ask' |
+ * 'session_only'); for the __host__ pseudo-key it means grant ('allow') or
+ * remove ('block') this extension's own host permission.
+ * ContentSetting.clear() is intentionally never used: it drops every rule of
+ * a type for every site, whereas writing back a value is per-origin.
  */
-async function resetSetting(spec, target, button) {
+async function applySetting(spec, target, value, button) {
+  if (value === undefined) return;
   button.disabled = true;
+  const label = button.textContent;
   button.textContent = 'Working…';
 
+  const fail = (err) => {
+    console.warn(`[auditor] ${spec.cs}=${value} failed`, err);
+    button.textContent = 'Failed - retry';
+    button.disabled = false;
+  };
+
   // Pseudo-key: adjust this extension's own host permission for the origin.
-  // chrome.permissions wants match patterns, not bare origins.
+  // chrome.permissions wants match patterns, not bare origins, and request()
+  // must originate from this user gesture (the click that got us here).
   if (spec.cs === '__host__') {
     try {
-      await chrome.permissions.remove({ origins: [target.pattern] });
+      if (value === 'allow') {
+        const ok = await chrome.permissions.request({
+          origins: [target.pattern],
+        });
+        if (!ok) throw new Error('permission not granted');
+      } else {
+        await chrome.permissions.remove({ origins: [target.pattern] });
+      }
     } catch (err) {
-      console.warn('[auditor] permissions.remove failed', err);
-      button.textContent = 'Failed - retry';
-      button.disabled = false;
+      fail(err);
       return;
     }
     runAudit();
@@ -473,19 +657,15 @@ async function resetSetting(spec, target, button) {
   }
 
   const ns = chrome.contentSettings?.[spec.cs];
-  if (!ns?.set || REVOCATION_DEFAULT[spec.cs] === undefined) {
-    button.hidden = true;
+  if (!ns?.set) {
+    button.textContent = label;
+    button.disabled = false;
     return;
   }
   try {
-    await ns.set({
-      primaryPattern: target.pattern,
-      setting: REVOCATION_DEFAULT[spec.cs],
-    });
+    await ns.set({ primaryPattern: target.pattern, setting: value });
   } catch (err) {
-    console.warn(`[auditor] set(${spec.cs}) failed`, err);
-    button.textContent = 'Failed - retry';
-    button.disabled = false;
+    fail(err);
     return;
   }
   runAudit(); // re-query so the UI reflects the new effective settings
@@ -503,7 +683,7 @@ function renderCategory(cat, target, settings) {
   const card = el.tplCategory.content.firstElementChild.cloneNode(true);
   card.dataset.cardId = cat.id;
   card.dataset.total = String(items.length);
-  card.querySelector('.card__icon').textContent = cat.icon;
+  card.querySelector('.card__icon').innerHTML = ICONS[cat.icon] ?? ICONS.dot;
   card.querySelector('.card__title').textContent = cat.title;
 
   const head = card.querySelector('.card__head');
@@ -556,12 +736,30 @@ function tallySettings(settings, hostInfo) {
   return { granted, blocked, dflt };
 }
 
-/** Paint the at-a-glance tally in the header. */
+/**
+ * Paint the at-a-glance tally and its proportional meter.
+ *
+ * Each meter segment is a flex item whose grow factor is the raw count, so
+ * the bar stays correct for any total without percentage math. Segments with
+ * a zero count are hidden outright, which also removes their flex gap.
+ */
 function renderStats({ granted, blocked, dflt }) {
+  const total = granted + blocked + dflt;
   el.statGranted.textContent = String(granted);
   el.statBlocked.textContent = String(blocked);
   el.statDefault.textContent = String(dflt);
-  el.statStrip.hidden = granted + blocked + dflt === 0;
+  el.statStrip.hidden = total === 0;
+  el.meter.hidden = total === 0;
+
+  const segments = [
+    [el.meterGranted, granted],
+    [el.meterBlocked, blocked],
+    [el.meterDefault, dflt],
+  ];
+  for (const [node, count] of segments) {
+    node.style.flexGrow = String(count);
+    node.hidden = count === 0;
+  }
 }
 
 /**
@@ -665,9 +863,13 @@ async function runAudit() {
   el.searchBar.hidden = true;
   el.noResults.hidden = true;
   el.statStrip.hidden = true;
+  el.meter.hidden = true;
   el.siteName.textContent = 'Loading…';
   el.siteUrl.hidden = true;
+  // Empty avatar tile while loading (the letter lands with the target).
   el.favicon.hidden = true;
+  el.siteInitial.hidden = false;
+  el.siteInitial.textContent = '';
 
   // 2. API sanity check (guards against future Chrome changes / side-loads).
   if (!chrome.contentSettings) {
@@ -704,6 +906,7 @@ async function runAudit() {
     el.notAuditableReason.textContent = isExtensionPage
       ? 'This tab is an extension or browser page, so it has no per-site permissions to audit.'
       : 'This tab is not a regular website, so it has no per-site permissions to audit.';
+    showInitial(el.siteName.textContent);
     el.skeleton.hidden = true;
     el.notAuditable.hidden = false;
     return;
@@ -721,14 +924,18 @@ async function runAudit() {
   el.siteName.textContent = prettyUrl(url);
   el.siteUrl.textContent = target.origin;
   el.siteUrl.hidden = false;
+  showInitial(prettyUrl(url));
 
   if (target.faviconUrl) {
-    // Local lookup via the favicon API - no third-party request.
+    // Local lookup via the favicon API - no third-party request. The letter
+    // tile covers the gap until the image decodes (and forever if it fails).
     el.favicon.src = target.faviconUrl;
-    el.favicon.hidden = false;
-    el.favicon.onerror = () => {
-      el.favicon.hidden = true;
-    };
+    // Re-auditing the same origin reuses the cached image, which fires no
+    // new `load` event - so adopt an already-resolved favicon directly.
+    if (el.favicon.complete && el.favicon.naturalWidth > 0) {
+      el.favicon.hidden = false;
+      el.siteInitial.hidden = true;
+    }
   }
 
   // Deep link into Chrome's per-site settings page for this origin.
@@ -752,12 +959,12 @@ async function runAudit() {
       {
         id: 'ext',
         title: 'Extension Host Access',
-        icon: '🧩',
+        icon: 'link',
         items: [
           {
             cs: '__host__',
             label: 'This extension on this site',
-            icon: '🧩',
+            icon: 'link',
             detail: hostInfo.allUrls
               ? 'This extension has broad host access (declared in its manifest).'
               : 'This extension may access this site (granted via chrome://extensions).',

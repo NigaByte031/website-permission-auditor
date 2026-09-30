@@ -7,30 +7,44 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <!-- ===== Header: origin being audited + summary pill ===== -->
+    <!-- ===== Header: site identity + at-a-glance verdict ===== -->
     <header class="header">
+      <div class="header__aurora" aria-hidden="true"></div>
+
       <div class="header__row">
-        <img id="favicon" class="header__favicon" alt="" src="" hidden />
-        <div class="header__text">
-          <span id="siteName" class="header__site">Loading&hellip;</span>
-          <span id="siteUrl" class="header__url" hidden></span>
-        </div>
+        <span class="identity" id="avatar">
+          <img id="favicon" class="identity__img" alt="" src="" hidden />
+          <span class="identity__initial" id="siteInitial" aria-hidden="true"></span>
+        </span>
+
+        <span class="identity__text">
+          <span id="siteName" class="identity__name">Loading&hellip;</span>
+          <span id="siteUrl" class="identity__url" hidden></span>
+        </span>
+
         <span id="summaryBadge" class="badge" hidden></span>
       </div>
 
+      <!-- Proportional bar: granted / blocked / on-ask (popup.js sizes it) -->
+      <div class="meter" id="meter" hidden aria-hidden="true">
+        <span class="meter__seg meter__seg--granted" id="meterGranted"></span>
+        <span class="meter__seg meter__seg--blocked" id="meterBlocked"></span>
+        <span class="meter__seg meter__seg--default" id="meterDefault"></span>
+      </div>
+
       <!-- At-a-glance tally of the audit (populated by popup.js) -->
-      <div class="stats" id="statStrip" hidden>
-        <span class="stat stat--granted">
-          <span class="stat__dot" aria-hidden="true"></span>
-          <span class="stat__count" id="statGranted">0</span> granted
+      <div class="tally" id="statStrip" hidden>
+        <span class="tally__item tally__item--granted">
+          <span class="tally__value" id="statGranted">0</span>
+          <span class="tally__label">Granted</span>
         </span>
-        <span class="stat stat--blocked">
-          <span class="stat__dot" aria-hidden="true"></span>
-          <span class="stat__count" id="statBlocked">0</span> blocked
+        <span class="tally__item tally__item--blocked">
+          <span class="tally__value" id="statBlocked">0</span>
+          <span class="tally__label">Blocked</span>
         </span>
-        <span class="stat stat--default">
-          <span class="stat__dot" aria-hidden="true"></span>
-          <span class="stat__count" id="statDefault">0</span> default
+        <span class="tally__item tally__item--default">
+          <span class="tally__value" id="statDefault">0</span>
+          <span class="tally__label">On ask</span>
         </span>
       </div>
 
@@ -92,7 +106,12 @@
 
       <!-- "All clear" state -->
       <section id="allClear" class="all-clear" hidden>
-        <span class="all-clear__icon" aria-hidden="true">🛡️</span>
+        <span class="all-clear__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+            <path d="M12 2.6 4.8 5.6v6c0 4.9 3 8.6 7.2 9.9 4.2-1.3 7.2-5 7.2-9.9v-6L12 2.6Z" />
+            <path d="m8.8 11.9 2.3 2.3 4.3-4.6" />
+          </svg>
+        </span>
         <strong class="all-clear__title">All clear</strong>
         <span class="all-clear__sub"
           >No special permissions granted to this site.</span
@@ -120,7 +139,9 @@
         Audits only this tab's site settings.
         <span class="footer__version" id="versionChip" hidden></span>
       </span>
-      <a id="chromeSettingsLink" class="footer__link" href="#">Open Chrome settings ↗</a>
+      <a id="chromeSettingsLink" class="footer__link" href="#"
+        >Chrome settings ↗</a
+      >
     </footer>
 
     <template id="tpl-category">
@@ -162,7 +183,34 @@
             <span class="perm__value"></span>
           </div>
           <span class="perm__detail"></span>
-          <button class="perm__revoke" type="button" hidden></button>
+          <!-- Enable / Disable toggle this permission; Reset restores the
+               browser default. Wired by popup.js. -->
+          <div class="perm__actions">
+            <button
+              class="perm__action perm__action--allow"
+              type="button"
+              data-action="allow"
+              aria-pressed="false"
+            >
+              Enable
+            </button>
+            <button
+              class="perm__action perm__action--block"
+              type="button"
+              data-action="block"
+              aria-pressed="false"
+            >
+              Disable
+            </button>
+            <button
+              class="perm__action perm__action--reset"
+              type="button"
+              data-action="reset"
+              hidden
+            >
+              Reset
+            </button>
+          </div>
         </div>
       </li>
     </template>
