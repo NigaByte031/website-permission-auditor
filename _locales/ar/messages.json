@@ -1,0 +1,451 @@
+{
+  "extName": {
+    "message": "مدقّق أذونات المواقع",
+    "description": "Extension name in the toolbar, chrome://extensions and the Web Store."
+  },
+  "extShortName": {
+    "message": "مدقّق الأذونات",
+    "description": "Short extension name shown when space is tight."
+  },
+  "extDescription": {
+    "message": "دقّق أذونات الكاميرا والميكروفون والموقع الجغرافي والإشعارات والحافظة والوصول إلى المضيف للموقع الذي تعرضه.",
+    "description": "Extension description in chrome://extensions and the Web Store."
+  },
+
+  "loading": {
+    "message": "جارٍ التحميل…",
+    "description": "Placeholder shown while the audit runs."
+  },
+  "unableToAudit": {
+    "message": "تعذّر التدقيق",
+    "description": "Header shown when the audit could not run."
+  },
+  "errorNoContentSettings": {
+    "message": "‏chrome.contentSettings غير متاح في هذا المتصفح. يتطلب المدقّق متصفحًا مبنيًا على Chromium.",
+    "description": "Fatal error shown when the contentSettings API is missing."
+  },
+
+  "themeGroupLabel": {
+    "message": "سمة الألوان",
+    "description": "Accessible name of the System/Light/Dark theme toggle group."
+  },
+  "themeSystem": {
+    "message": "اتّباع سمة النظام",
+    "description": "Title and accessible name of the 'system' theme button."
+  },
+  "themeLight": {
+    "message": "السمة الفاتحة",
+    "description": "Title and accessible name of the 'light' theme button."
+  },
+  "themeDark": {
+    "message": "السمة الداكنة",
+    "description": "Title and accessible name of the 'dark' theme button."
+  },
+
+  "statGranted": {
+    "message": "ممنوح",
+    "description": "Header tally label for granted permissions."
+  },
+  "statBlocked": {
+    "message": "محظور",
+    "description": "Header tally label for blocked permissions."
+  },
+  "statDefault": {
+    "message": "عند الطلب",
+    "description": "Header tally label for permissions still on the browser default."
+  },
+  "badgeGranted": {
+    "message": "$1 ممنوح",
+    "description": "Header badge; $1 is the number of granted permissions."
+  },
+  "badgeRestricted": {
+    "message": "مقيّد",
+    "description": "Header badge shown when nothing is granted."
+  },
+  "summaryExtra": {
+    "message": "يمتلك هذا الموقع أذونات تتجاوز الإعداد الافتراضي للمتصفح. راجعها أدناه.",
+    "description": "Header summary line when at least one permission is granted."
+  },
+  "summaryNone": {
+    "message": "لم يُمنح أي وصول خاص؛ بعض الإمكانات محظورة على هذا الموقع.",
+    "description": "Header summary line when nothing is granted."
+  },
+
+  "filterPlaceholder": {
+    "message": "تصفية الأذونات…",
+    "description": "Placeholder of the permission filter box."
+  },
+  "filterLabel": {
+    "message": "تصفية صفوف الأذونات",
+    "description": "Accessible name of the permission filter box."
+  },
+  "filterClear": {
+    "message": "مسح عامل التصفية",
+    "description": "Accessible name of the filter clear button."
+  },
+  "noResults": {
+    "message": "لا توجد أذونات تطابق «$1».",
+    "description": "Shown when the filter matches nothing; $1 is the query."
+  },
+
+  "presetsGroupLabel": {
+    "message": "الإعدادات المسبقة لأذونات الموقع",
+    "description": "Accessible name of the preset section."
+  },
+  "presetsTitle": {
+    "message": "تطبيق ملف تعريف",
+    "description": "Visible title of the preset section."
+  },
+  "profilesToolbarLabel": {
+    "message": "ملفات تعريف الأذونات",
+    "description": "Accessible name of the preset button toolbar."
+  },
+  "presetPreviewLabel": {
+    "message": "معاينة الإعداد المسبق",
+    "description": "Accessible name of the preset confirmation panel."
+  },
+  "presetEditorLabel": {
+    "message": "محرر الإعداد المسبق المخصص",
+    "description": "Accessible name of the custom preset editor."
+  },
+  "presetNameLabel": {
+    "message": "اسم الإعداد المسبق",
+    "description": "Label of the custom preset name field."
+  },
+  "presetNamePlaceholder": {
+    "message": "ملفي الشخصي",
+    "description": "Placeholder of the custom preset name field."
+  },
+  "presetSave": {
+    "message": "حفظ الإعداد المسبق",
+    "description": "Custom preset editor save button."
+  },
+  "presetCancel": {
+    "message": "إلغاء",
+    "description": "Cancel button in the preset preview and editor."
+  },
+  "close": {
+    "message": "إغلاق",
+    "description": "Close button in the preset preview when there is nothing to apply."
+  },
+  "presetDelete": {
+    "message": "حذف الإعداد المسبق",
+    "description": "Delete button for a custom preset."
+  },
+  "newPreset": {
+    "message": "إعداد مسبق جديد",
+    "description": "Button that opens the custom preset editor."
+  },
+  "newPresetTitle": {
+    "message": "إنشاء إعداد مسبق مخصص من أذونات هذا الموقع",
+    "description": "Tooltip of the 'New preset' button."
+  },
+  "customPresetDefault": {
+    "message": "إعداد مسبق مخصص",
+    "description": "Fallback name for a custom preset with no name."
+  },
+  "customPresetHint": {
+    "message": "إعداد مسبق مخصص: $1",
+    "description": "Tooltip of a custom preset button; $1 is its name."
+  },
+
+  "presetLockdown": {
+    "message": "إغلاق كامل",
+    "description": "Built-in preset button label."
+  },
+  "presetLockdownHint": {
+    "message": "حظر الكاميرا والميكروفون والموقع الجغرافي والإشعارات والحافظة والتنزيلات التلقائية.",
+    "description": "Tooltip of the 'Lock down' preset."
+  },
+  "presetBalanced": {
+    "message": "متوازن",
+    "description": "Built-in preset button label."
+  },
+  "presetBalancedHint": {
+    "message": "إعادة كل إذن على هذا الموقع إلى الإعداد الافتراضي للمتصفح.",
+    "description": "Tooltip of the 'Balanced' preset."
+  },
+  "presetAllowCamera": {
+    "message": "السماح بالكاميرا",
+    "description": "Built-in preset button label."
+  },
+  "presetAllowCameraHint": {
+    "message": "منح الوصول إلى الكاميرا وإعادة كل شيء آخر إلى الإعداد الافتراضي للمتصفح.",
+    "description": "Tooltip of the 'Allow camera' preset."
+  },
+
+  "previewChangeOne": {
+    "message": " سيغيّر إذنًا واحدًا:",
+    "description": "Confirmation sentence when a preset changes exactly one permission."
+  },
+  "previewChangeMany": {
+    "message": " سيغيّر $1 أذونات:",
+    "description": "Confirmation sentence; $1 is the number of permissions that change."
+  },
+  "previewNothing": {
+    "message": " لا يوجد ما يمكن تغييره — هذا الموقع مطابق بالفعل.",
+    "description": "Confirmation sentence when a preset would change nothing."
+  },
+  "previewApplyOne": {
+    "message": "تطبيق على إعداد واحد",
+    "description": "Confirm button when a preset changes exactly one setting."
+  },
+  "previewApplyMany": {
+    "message": "تطبيق على $1 إعدادات",
+    "description": "Confirm button; $1 is the number of settings that change."
+  },
+  "previewFlowLabel": {
+    "message": "من $1 إلى $2",
+    "description": "Spoken form of a 'current -> new' row; $1 is the current value, $2 the new one."
+  },
+  "presetAppliedOne": {
+    "message": "طُبّق $1 على إعداد واحد",
+    "description": "Undo entry label; $1 is the preset name."
+  },
+  "presetAppliedMany": {
+    "message": "طُبّق $1 على $2 إعدادات",
+    "description": "Undo entry label; $1 is the preset name, $2 the number of settings."
+  },
+
+  "editorTarget": {
+    "message": "هدف $1",
+    "description": "Accessible name of a preset editor select; $1 is the permission name."
+  },
+  "optDefault": {
+    "message": "افتراضي",
+    "description": "Preset editor option: leave the browser default."
+  },
+  "optAllow": {
+    "message": "سماح",
+    "description": "Preset editor option: allow."
+  },
+  "optBlock": {
+    "message": "حظر",
+    "description": "Preset editor option: block."
+  },
+  "optAsk": {
+    "message": "سؤال",
+    "description": "Preset editor option: ask every time."
+  },
+
+  "undo": {
+    "message": "تراجع",
+    "description": "Undo button in the action bar."
+  },
+  "undoMore": {
+    "message": " (+$1 أخرى)",
+    "description": "Suffix added to the undo label; $1 is the number of older entries."
+  },
+  "resetSite": {
+    "message": "إعادة تعيين هذا الموقع",
+    "description": "Site-wide reset button."
+  },
+  "resetting": {
+    "message": "جارٍ إعادة التعيين…",
+    "description": "Busy label of the site-wide reset button."
+  },
+  "allReset": {
+    "message": "أُعيدت جميع الأذونات إلى الإعدادات الافتراضية",
+    "description": "Undo entry label for a site-wide reset."
+  },
+
+  "working": {
+    "message": "جارٍ العمل…",
+    "description": "Busy label of a permission action button."
+  },
+  "failedRetry": {
+    "message": "فشل — إعادة المحاولة",
+    "description": "Error label of a permission action button."
+  },
+  "labelGranted": {
+    "message": "مُنح $1",
+    "description": "Undo label for granting a host permission; $1 is the row name."
+  },
+  "labelRevoked": {
+    "message": "سُحب $1",
+    "description": "Undo label for revoking a host permission; $1 is the row name."
+  },
+  "labelEnabled": {
+    "message": "فُعّل $1",
+    "description": "Undo label for enabling a permission; $1 is the row name."
+  },
+  "labelDisabled": {
+    "message": "أُعطّل $1",
+    "description": "Undo label for disabling a permission; $1 is the row name."
+  },
+  "labelReset": {
+    "message": "أُعيد تعيين $1",
+    "description": "Undo label for resetting a permission; $1 is the row name."
+  },
+
+  "enable": {
+    "message": "تمكين",
+    "description": "'Allow' action button on a permission row."
+  },
+  "disable": {
+    "message": "تعطيل",
+    "description": "'Block' action button on a permission row."
+  },
+  "reset": {
+    "message": "إعادة تعيين",
+    "description": "'Restore default' action button on a permission row."
+  },
+
+  "allClearTitle": {
+    "message": "كل شيء على ما يرام",
+    "description": "Title of the friendly empty state."
+  },
+  "allClearSub": {
+    "message": "لم تُمنح أي أذونات خاصة لهذا الموقع.",
+    "description": "Subtitle of the friendly empty state."
+  },
+
+  "notAuditableTitle": {
+    "message": "لا شيء للتدقيق هنا",
+    "description": "Title of the notice shown for non-web pages."
+  },
+  "notAuditableDefault": {
+    "message": "هذه الصفحة صفحة متصفح أو إضافة، لذا ليس لها أذونات موقع.",
+    "description": "Static notice body in popup.html."
+  },
+  "notAuditableExt": {
+    "message": "هذا التبويب صفحة إضافة أو متصفح، لذا ليس له أذونات خاصة بموقع لتدقيقها.",
+    "description": "Notice body for chrome:// and extension pages."
+  },
+  "notAuditableOther": {
+    "message": "هذا التبويب ليس موقعًا عاديًا، لذا ليس له أذونات خاصة بموقع لتدقيقها.",
+    "description": "Notice body for other non-web tabs."
+  },
+  "extensionPageName": {
+    "message": "صفحة إضافة أو متصفح",
+    "description": "Site name shown for extension/browser pages."
+  },
+  "browserPageName": {
+    "message": "صفحة متصفح",
+    "description": "Site name shown for other non-web pages."
+  },
+
+  "footerHint": {
+    "message": "يدقّق إعدادات موقع هذا التبويب فقط.",
+    "description": "Footer privacy hint."
+  },
+  "chromeSettingsLink": {
+    "message": "إعدادات Chrome ↗",
+    "description": "Footer link that opens Chrome's site settings."
+  },
+
+  "catHardware": {
+    "message": "العتاد",
+    "description": "Category card title."
+  },
+  "catLocation": {
+    "message": "الموقع",
+    "description": "Category card title."
+  },
+  "catNotifications": {
+    "message": "الإشعارات",
+    "description": "Category card title."
+  },
+  "catData": {
+    "message": "البيانات والحافظة",
+    "description": "Category card title."
+  },
+  "catHost": {
+    "message": "بيانات الموقع / الوصول إلى المضيف",
+    "description": "Category card title."
+  },
+  "catExtHost": {
+    "message": "وصول الإضافة إلى المضيف",
+    "description": "Category card title for this extension's own host permission."
+  },
+
+  "permCamera": { "message": "الكاميرا", "description": "Permission row label." },
+  "permCameraDetail": {
+    "message": "استخدام الكاميرا لالتقاط الفيديو.",
+    "description": "Permission row description."
+  },
+  "permMicrophone": { "message": "الميكروفون", "description": "Permission row label." },
+  "permMicrophoneDetail": {
+    "message": "استخدام الميكروفون لتسجيل الصوت.",
+    "description": "Permission row description."
+  },
+  "permGeolocation": { "message": "الموقع الجغرافي", "description": "Permission row label." },
+  "permGeolocationDetail": {
+    "message": "قراءة موقعك الفعلي.",
+    "description": "Permission row description."
+  },
+  "permNotifications": { "message": "الإشعارات", "description": "Permission row label." },
+  "permNotificationsDetail": {
+    "message": "عرض إشعارات سطح المكتب.",
+    "description": "Permission row description."
+  },
+  "permClipboard": { "message": "الحافظة", "description": "Permission row label." },
+  "permClipboardDetail": {
+    "message": "استخدام إمكانات الحافظة المتقدمة (القراءة والكتابة المخصصة).",
+    "description": "Permission row description."
+  },
+  "permCookies": { "message": "ملفات تعريف الارتباط وبيانات الموقع", "description": "Permission row label." },
+  "permCookiesDetail": {
+    "message": "تخزين ملفات تعريف الارتباط وغيرها من البيانات المحلية.",
+    "description": "Permission row description."
+  },
+  "permDownloads": { "message": "التنزيلات التلقائية", "description": "Permission row label." },
+  "permDownloadsDetail": {
+    "message": "تنزيل عدة ملفات دون السؤال في كل مرة.",
+    "description": "Permission row description."
+  },
+  "permJavascript": { "message": "JavaScript", "description": "Permission row label." },
+  "permJavascriptDetail": {
+    "message": "تشغيل JavaScript على هذا الموقع.",
+    "description": "Permission row description."
+  },
+  "permImages": { "message": "الصور", "description": "Permission row label." },
+  "permImagesDetail": {
+    "message": "تحميل الصور وعرضها.",
+    "description": "Permission row description."
+  },
+  "permSound": { "message": "الصوت", "description": "Permission row label." },
+  "permSoundDetail": {
+    "message": "تشغيل الصوت دون كتم.",
+    "description": "Permission row description."
+  },
+  "permPopups": { "message": "النوافذ المنبثقة", "description": "Permission row label." },
+  "permPopupsDetail": {
+    "message": "فتح نوافذ وعلامات تبويب جديدة في المتصفح.",
+    "description": "Permission row description."
+  },
+
+  "hostPermLabel": {
+    "message": "هذه الإضافة على هذا الموقع",
+    "description": "Label of this extension's own host-access row."
+  },
+  "hostPermBroad": {
+    "message": "تمتلك هذه الإضافة وصولًا واسعًا إلى المضيف (مُعلَنًا في بيانها).",
+    "description": "Description of a wildcard host grant."
+  },
+  "hostPermGranted": {
+    "message": "يمكن لهذه الإضافة الوصول إلى هذا الموقع (ممنوح عبر chrome://extensions).",
+    "description": "Description of a per-site host grant."
+  },
+
+  "statusAllowed": {
+    "message": "مسموح",
+    "description": "Effective value of an 'allow' content setting."
+  },
+  "statusBlocked": {
+    "message": "محظور",
+    "description": "Effective value of a 'block' content setting."
+  },
+  "statusAsk": {
+    "message": "سؤال (افتراضي)",
+    "description": "Effective value of an 'ask' content setting."
+  },
+  "statusSession": {
+    "message": "مسموح (هذه الجلسة)",
+    "description": "Effective value of a 'session_only' content setting."
+  },
+  "statusUnknown": {
+    "message": "غير معروف",
+    "description": "Effective value when the API could not resolve a setting."
+  }
+}

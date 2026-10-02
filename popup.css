@@ -466,7 +466,7 @@ body.is-scrolled .header {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 0;
+  inset-inline-start: 0;
   width: 3px;
   background: var(--neutral);
 }
@@ -513,8 +513,8 @@ body.is-scrolled .header {
 
 .header__summary {
   margin: 12px 0 0;
-  padding-left: 10px;
-  border-left: 2px solid var(--accent-a20);
+  padding-inline-start: 10px;
+  border-inline-start: 2px solid var(--accent-a20);
   color: var(--text-muted);
   font-size: 12px;
   line-height: 1.45;
@@ -710,7 +710,7 @@ main {
   border: 0;
   border-bottom: 1px solid var(--border);
   color: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   user-select: none;
   transition: background-color 0.15s ease;
@@ -1074,8 +1074,9 @@ main {
   align-items: center;
   gap: 8px;
   min-width: 0;
-  margin-right: auto;
-  padding: 3px 4px 3px 12px;
+  margin-inline-end: auto;
+  padding-block: 3px;
+  padding-inline: 12px 4px;
   background: var(--accent-soft);
   border: 1px solid var(--accent-a20);
   border-radius: 999px;
@@ -1118,7 +1119,7 @@ main {
 
 .reset-site {
   flex: none;
-  margin-left: auto;
+  margin-inline-start: auto;
   padding: 5px 13px;
   font-size: 11px;
   font-weight: 650;
@@ -1723,7 +1724,7 @@ main {
 
 .footer__version {
   display: inline-block;
-  margin-left: 6px;
+  margin-inline-start: 6px;
   padding: 1px 7px;
   border-radius: 999px;
   background: var(--surface-3);
@@ -1781,4 +1782,27 @@ main {
   .skeleton__line {
     animation: none;
   }
+}
+
+/* ==========================================================================
+ * Right-to-left (Persian / Arabic)
+ * ==========================================================================
+ * popup.js stamps dir="rtl" on <html> whenever the browser's UI language is
+ * written right to left. The layout is built from flex/grid and the physical
+ * properties above use logical (inline-*) forms, so the whole popup mirrors
+ * itself; only two things are Latin-specific:
+ *
+ *   1. Tracking. The per-element letter-spacing values are tuned for Latin;
+ *      on connected Arabic-script letterforms they stretch (or overlap) the
+ *      join, so RTL falls back to the default.
+ *   2. The font stack. system-ui resolves to a Latin face first on several
+ *      platforms, so Persian gets a script-capable fallback list.
+ */
+[dir='rtl'] * {
+  letter-spacing: normal;
+}
+
+[dir='rtl'] body {
+  font-family: system-ui, -apple-system, 'Segoe UI', Tahoma, 'Vazirmatn',
+    'Iranian Sans', Roboto, Helvetica, Arial, sans-serif;
 }

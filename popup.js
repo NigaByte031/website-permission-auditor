@@ -27,6 +27,116 @@
 'use strict';
 
 /* ==========================================================================
+ * Localization (chrome.i18n)
+ * ==========================================================================
+ * Every user-visible string lives in _locales/<lang>/messages.json and is
+ * resolved through chrome.i18n.getMessage(), so the popup follows the
+ * browser's UI language (English is the default locale; Persian and Arabic
+ * are shipped alongside it).
+ *
+ *   t(key, subs)       localized text ($1..$9 substitutions supported)
+ *   num(value)         a count rendered in the locale's own numerals
+ *   localizeDom(root)  fills the declarative data-i18n* slots in the markup
+ *
+ * Messages that would need plural forms ship as a one/many pair of keys
+ * (previewApplyOne / previewApplyMany, ...) because the popup picks between
+ * them - English, Persian and Arabic do not agree on when a singular exists.
+ */
+
+/** Language Chrome resolved for the extension UI (e.g. "fa", "en-US"). */
+const UI_LANG = (() => {
+  try {
+    return chrome.i18n?.getUILanguage?.() || 'en';
+  } catch {
+    return 'en';
+  }
+})();
+
+/** Lower-cased primary subtag ("fa", "en") - drives script-level choices. */
+const UI_LANG_BASE = UI_LANG.toLowerCase().split('-')[0];
+
+/** Languages written right to left; these flip the whole popup layout. */
+const RTL_LANGS = new Set(['ar', 'ckb', 'dv', 'fa', 'he', 'ps', 'ur', 'yi']);
+
+/** True when the UI must be laid out right to left (Persian, Arabic, ...). */
+const IS_RTL = RTL_LANGS.has(UI_LANG_BASE);
+
+/**
+ * Fetch one localized message. `subs` may be a string or an array of strings
+ * matching the $1..$9 slots in the message. An unknown key returns the key
+ * itself so a typo stays visible instead of blanking the interface.
+ *
+ * @param {string} key
+ * @param {string|string[]} [subs]
+ * @returns {string}
+ */
+function t(key, subs) {
+  try {
+    const msg =
+      subs === undefined
+        ? chrome.i18n.getMessage(key)
+        : chrome.i18n.getMessage(key, subs);
+    if (msg) return msg;
+  } catch {
+    /* chrome.i18n unavailable - fall back to the key */
+  }
+  return key;
+}
+
+/** Persian digits, indexed by their Western value. */
+const FA_DIGITS = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+
+/** Arabic-Indic digits, indexed by their Western value. */
+const AR_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+
+/**
+ * Format a count using the numerals of the current locale (Persian reads
+ * ۰۱۲۳, Arabic reads ٠١٢٣, every other shipped locale reads 0123).
+ *
+ * @param {number|string} value
+ * @returns {string}
+ */
+function num(value) {
+  const text = String(value);
+  const digits = UI_LANG_BASE === 'fa' ? FA_DIGITS : UI_LANG_BASE === 'ar' ? AR_DIGITS : null;
+  return digits ? text.replace(/[0-9]/g, (d) => digits[Number(d)]) : text;
+}
+
+/**
+ * Fill every declarative translation slot under `root`:
+ *   data-i18n              -> textContent
+ *   data-i18n-title        -> title
+ *   data-i18n-placeholder  -> placeholder
+ *   data-i18n-aria         -> aria-label
+ * `<template>` markup lives in a separate fragment, so those are localized
+ * by passing template.content.
+ *
+ * @param {Document|DocumentFragment} [root]
+ */
+function localizeDom(root) {
+  const scope = root ?? document;
+  for (const node of scope.querySelectorAll('[data-i18n]')) {
+    node.textContent = t(node.dataset.i18n);
+  }
+  for (const node of scope.querySelectorAll('[data-i18n-title]')) {
+    node.title = t(node.dataset.i18nTitle);
+  }
+  for (const node of scope.querySelectorAll('[data-i18n-placeholder]')) {
+    node.placeholder = t(node.dataset.i18nPlaceholder);
+  }
+  for (const node of scope.querySelectorAll('[data-i18n-aria]')) {
+    node.setAttribute('aria-label', t(node.dataset.i18nAria));
+  }
+}
+
+/* Stamp the document language/direction before the first paint, then fill
+   the static markup and every <template> that rows are cloned from. */
+document.documentElement.lang = UI_LANG;
+if (IS_RTL) document.documentElement.dir = 'rtl';
+localizeDom(document);
+for (const tpl of document.querySelectorAll('template')) localizeDom(tpl.content);
+
+/* ==========================================================================
  * Data model
  * ==========================================================================
  * Each audit entry maps a chrome.contentSettings property (the string key
@@ -162,102 +272,102 @@ const ICONS = {
 const CATEGORIES = [
   {
     id: 'hardware',
-    title: 'Hardware',
+    title: t('catHardware'),
     icon: 'chip',
     items: [
       {
         cs: 'camera',
-        label: 'Camera',
+        label: t('permCamera'),
         icon: 'camera',
-        detail: 'Use your camera to capture video.',
+        detail: t('permCameraDetail'),
       },
       {
         cs: 'microphone',
-        label: 'Microphone',
+        label: t('permMicrophone'),
         icon: 'microphone',
-        detail: 'Use your microphone to capture audio.',
+        detail: t('permMicrophoneDetail'),
       },
     ],
   },
   {
     id: 'location',
-    title: 'Location',
+    title: t('catLocation'),
     icon: 'pin',
     items: [
       {
         cs: 'location',
-        label: 'Geolocation',
+        label: t('permGeolocation'),
         icon: 'pin',
-        detail: 'Read your physical location.',
+        detail: t('permGeolocationDetail'),
       },
     ],
   },
   {
     id: 'notifications',
-    title: 'Notifications',
+    title: t('catNotifications'),
     icon: 'bell',
     items: [
       {
         cs: 'notifications',
-        label: 'Notifications',
+        label: t('permNotifications'),
         icon: 'bell',
-        detail: 'Show desktop notifications.',
+        detail: t('permNotificationsDetail'),
       },
     ],
   },
   {
     id: 'data',
-    title: 'Data & Clipboard',
+    title: t('catData'),
     icon: 'database',
     items: [
       {
         cs: 'clipboard',
-        label: 'Clipboard',
+        label: t('permClipboard'),
         icon: 'clipboard',
-        detail: 'Use advanced clipboard capabilities (read, custom writes).',
+        detail: t('permClipboardDetail'),
       },
       {
         cs: 'cookies',
-        label: 'Cookies & site data',
+        label: t('permCookies'),
         icon: 'cookie',
-        detail: 'Store cookies and other local data.',
+        detail: t('permCookiesDetail'),
       },
       {
         cs: 'automaticDownloads',
-        label: 'Automatic downloads',
+        label: t('permDownloads'),
         icon: 'download',
-        detail: 'Download multiple files without asking each time.',
+        detail: t('permDownloadsDetail'),
       },
     ],
   },
   {
     id: 'host',
-    title: 'Site Data / Host Access',
+    title: t('catHost'),
     icon: 'globe',
     items: [
       {
         cs: 'javascript',
-        label: 'JavaScript',
+        label: t('permJavascript'),
         icon: 'code',
-        detail: 'Run JavaScript on this site.',
+        detail: t('permJavascriptDetail'),
       },
       {
         cs: 'images',
-        label: 'Images',
+        label: t('permImages'),
         icon: 'image',
-        detail: 'Load and display images.',
+        detail: t('permImagesDetail'),
       },
       {
         cs: 'sound',
-        label: 'Sound',
+        label: t('permSound'),
         icon: 'volume',
-        detail: 'Play audio without being muted.',
+        detail: t('permSoundDetail'),
       },
       {
         cs: 'popups',
-        label: 'Pop-ups',
+        label: t('permPopups'),
         icon: 'window',
-        detail: 'Open new browser windows and tabs.',
+        detail: t('permPopupsDetail'),
       },
     ],
   },
@@ -279,10 +389,10 @@ const SPEC_BY_CS = new Map(
  * 'session_only'). Map each onto display text + a CSS status class.
  */
 const SETTING_LABELS = {
-  allow: { text: 'Allowed', cls: 'ok' },
-  block: { text: 'Blocked', cls: 'deny' },
-  ask: { text: 'Ask (default)', cls: 'warn' },
-  session_only: { text: 'Allowed (this session)', cls: 'warn' },
+  allow: { text: t('statusAllowed'), cls: 'ok' },
+  block: { text: t('statusBlocked'), cls: 'deny' },
+  ask: { text: t('statusAsk'), cls: 'warn' },
+  session_only: { text: t('statusSession'), cls: 'warn' },
 };
 
 /** Settings that count as "permission granted" for the summary badge. */
@@ -333,9 +443,9 @@ const REVOCATION_DEFAULT = {
 const PRESETS = [
   {
     id: 'lockdown',
-    label: 'Lock down',
+    label: t('presetLockdown'),
     icon: 'shield',
-    hint: 'Block camera, microphone, location, notifications, clipboard and automatic downloads.',
+    hint: t('presetLockdownHint'),
     values: {
       camera: 'block',
       microphone: 'block',
@@ -347,17 +457,17 @@ const PRESETS = [
   },
   {
     id: 'balanced',
-    label: 'Balanced',
+    label: t('presetBalanced'),
     icon: 'sliders',
-    hint: 'Reset every permission on this site back to the browser default.',
+    hint: t('presetBalancedHint'),
     values: {},
     resetOthers: true,
   },
   {
     id: 'camera',
-    label: 'Allow camera',
+    label: t('presetAllowCamera'),
     icon: 'camera',
-    hint: 'Grant camera access and reset everything else to the browser default.',
+    hint: t('presetAllowCameraHint'),
     values: { camera: 'allow' },
     resetOthers: true,
   },
@@ -389,13 +499,14 @@ function normalizeCustomPreset(entry) {
   for (const [cs, val] of Object.entries(entry.values ?? {})) {
     if (typeof val === 'string' && SETTING_LABELS[val]) values[cs] = val;
   }
-  const label = entry.label.slice(0, 24).trim() || 'Custom preset';
+  const label =
+    entry.label.slice(0, 24).trim() || t('customPresetDefault');
   return {
     id: typeof entry.id === 'string' && entry.id ? entry.id : `custom:${Date.now().toString(36)}`,
     label,
     icon: 'sliders',
     custom: true,
-    hint: `Custom preset: ${label}`,
+    hint: t('customPresetHint', label),
     values,
   };
 }
@@ -756,7 +867,10 @@ el.favicon.addEventListener('error', () => {
  */
 function renderPermItem(parent, spec, setting, target) {
   const node = el.tplItem.content.firstElementChild.cloneNode(true);
-  const info = SETTING_LABELS[setting] ?? { text: 'Unknown', cls: 'neutral' };
+  const info = SETTING_LABELS[setting] ?? {
+    text: t('statusUnknown'),
+    cls: 'neutral',
+  };
 
   const glyph = node.querySelector('.perm__glyph');
   glyph.innerHTML = ICONS[spec.icon] ?? ICONS.dot;
@@ -845,13 +959,13 @@ async function applySetting(spec, target, value, button) {
   const label = button?.textContent;
   if (button) {
     button.disabled = true;
-    button.textContent = 'Working…';
+    button.textContent = t('working');
   }
 
   const fail = (err) => {
     console.warn(`[auditor] ${spec.cs}=${value} failed`, err);
     if (button) {
-      button.textContent = 'Failed - retry';
+      button.textContent = t('failedRetry');
       button.disabled = false;
     }
   };
@@ -914,12 +1028,12 @@ let activeSettings = null;
 function changeLabel(spec, value) {
   if (spec.cs === '__host__') {
     return value === 'allow'
-      ? `${spec.label} granted`
-      : `${spec.label} revoked`;
+      ? t('labelGranted', spec.label)
+      : t('labelRevoked', spec.label);
   }
-  if (value === 'allow') return `${spec.label} enabled`;
-  if (value === 'block') return `${spec.label} disabled`;
-  return `${spec.label} reset`;
+  if (value === 'allow') return t('labelEnabled', spec.label);
+  if (value === 'block') return t('labelDisabled', spec.label);
+  return t('labelReset', spec.label);
 }
 
 /** Push a reversible entry onto the undo stack. */
@@ -937,7 +1051,8 @@ function renderUndoBar() {
     el.undoText.textContent = '';
     return;
   }
-  const more = undoStack.length > 1 ? ` (+${undoStack.length - 1} more)` : '';
+  const more =
+    undoStack.length > 1 ? t('undoMore', num(undoStack.length - 1)) : '';
   el.undoText.textContent = entry.label + more;
 }
 
@@ -987,13 +1102,13 @@ async function resetSiteToDefaults() {
   if (!ops.length) return;
 
   el.resetSiteBtn.disabled = true;
-  el.resetSiteBtn.textContent = 'Resetting…';
+  el.resetSiteBtn.textContent = t('resetting');
   for (const op of ops) {
     await applySetting({ cs: op.cs }, target, REVOCATION_DEFAULT[op.cs], null);
   }
-  recordUndo(ops, 'All permissions reset to defaults');
+  recordUndo(ops, t('allReset'));
 
-  el.resetSiteBtn.textContent = 'Reset this site';
+  el.resetSiteBtn.textContent = t('resetSite');
   runAudit();
 }
 
@@ -1073,7 +1188,7 @@ function renderPresets() {
   el.presetsRow.replaceChildren();
   el.presetsRow.setAttribute('role', 'toolbar');
   el.presetsRow.setAttribute('aria-orientation', 'horizontal');
-  el.presetsRow.setAttribute('aria-label', 'Permission profiles');
+  el.presetsRow.setAttribute('aria-label', t('profilesToolbarLabel'));
 
   const frag = document.createDocumentFragment();
 
@@ -1109,7 +1224,7 @@ function renderPresets() {
   addBtn.className = 'preset preset--new';
   addBtn.dataset.preset = '__new__';
   addBtn.tabIndex = -1;
-  addBtn.title = 'Create a custom preset from this site\u2019s permissions';
+  addBtn.title = t('newPresetTitle');
   addBtn.setAttribute('aria-controls', 'presetEditor');
   addBtn.setAttribute('aria-expanded', 'false');
 
@@ -1119,7 +1234,7 @@ function renderPresets() {
 
   const addLabel = document.createElement('span');
   addLabel.className = 'preset__label';
-  addLabel.textContent = 'New preset';
+  addLabel.textContent = t('newPreset');
 
   addBtn.append(addGlyph, addLabel);
   addBtn.addEventListener('click', () => {
@@ -1221,7 +1336,10 @@ function renderPreviewRow(op) {
 
   // The arrow is decorative; give the flow an explicit spoken form so screen
   // readers hear "Ask (default) to Blocked" rather than two loose words.
-  flow.setAttribute('aria-label', `${fromInfo.text} to ${toInfo.text}`);
+  flow.setAttribute(
+    'aria-label',
+    t('previewFlowLabel', [fromInfo.text, toInfo.text])
+  );
 
   const from = document.createElement('span');
   from.className = 'preset-preview__from';
@@ -1230,7 +1348,8 @@ function renderPreviewRow(op) {
   const arrow = document.createElement('span');
   arrow.className = 'preset-preview__arrow';
   arrow.setAttribute('aria-hidden', 'true');
-  arrow.textContent = '\u2192';
+  // The row mirrors with the layout, so the arrow has to point the other way.
+  arrow.textContent = IS_RTL ? '\u2190' : '\u2192';
 
   const to = document.createElement('span');
   to.className = `preset-preview__to preset-preview__to--${toInfo.cls}`;
@@ -1288,11 +1407,15 @@ function applyPreset(preset, trigger = null) {
   const cancel = document.createElement('button');
   cancel.type = 'button';
   cancel.className = 'preset-preview__cancel';
-  cancel.textContent = ops.length ? 'Cancel' : 'Close';
+  cancel.textContent = ops.length ? t('presetCancel') : t('close');
   cancel.addEventListener('click', () => closePresetPreview({ restoreFocus: true }));
 
   if (ops.length) {
-    title.append(` will change ${ops.length} permission${ops.length === 1 ? '' : 's'}:`);
+    title.append(
+      ops.length === 1
+        ? t('previewChangeOne')
+        : t('previewChangeMany', num(ops.length))
+    );
 
     const list = document.createElement('ul');
     list.className = 'preset-preview__list';
@@ -1301,7 +1424,10 @@ function applyPreset(preset, trigger = null) {
     const confirm = document.createElement('button');
     confirm.type = 'button';
     confirm.className = 'preset-preview__apply';
-    confirm.textContent = `Apply to ${ops.length} setting${ops.length === 1 ? '' : 's'}`;
+    confirm.textContent =
+      ops.length === 1
+        ? t('previewApplyOne')
+        : t('previewApplyMany', num(ops.length));
     confirm.addEventListener('click', commitPreset);
 
     actions.append(confirm, cancel);
@@ -1312,14 +1438,14 @@ function applyPreset(preset, trigger = null) {
       const del = document.createElement('button');
       del.type = 'button';
       del.className = 'preset-preview__delete';
-      del.textContent = 'Delete preset';
+      del.textContent = t('presetDelete');
       del.addEventListener('click', () => deleteCustomPreset(preset));
       actions.append(del);
     }
 
     panel.append(title, list, actions);
   } else {
-    title.append(' has nothing to change \u2014 this site already matches.');
+    title.append(t('previewNothing'));
     actions.append(cancel);
     panel.append(title, actions);
   }
@@ -1361,8 +1487,12 @@ async function commitPreset() {
   }
 
   if (applied.length) {
-    const plural = applied.length === 1 ? '' : 's';
-    recordUndo(applied, `${preset.label} applied to ${applied.length} setting${plural}`);
+    recordUndo(
+      applied,
+      applied.length === 1
+        ? t('presetAppliedOne', preset.label)
+        : t('presetAppliedMany', [preset.label, num(applied.length)])
+    );
   }
 
   setPresetsBusy(false);
@@ -1401,16 +1531,16 @@ function renderPresetEditorList() {
     const select = document.createElement('select');
     select.className = 'preset-editor__select';
     select.dataset.cs = cs;
-    select.setAttribute('aria-label', `${spec.label} target`);
+    select.setAttribute('aria-label', t('editorTarget', spec.label));
 
     const options = [
-      ['', 'Default'],
-      ['allow', 'Allow'],
-      ['block', 'Block'],
+      ['', t('optDefault')],
+      ['allow', t('optAllow')],
+      ['block', t('optBlock')],
     ];
     // Only ask-capable types accept 'ask'; offering it for cookies or scripts
     // would produce an invalid write.
-    if (REVOCATION_DEFAULT[cs] === 'ask') options.push(['ask', 'Ask']);
+    if (REVOCATION_DEFAULT[cs] === 'ask') options.push(['ask', t('optAsk')]);
 
     const current = entry.setting === 'session_only' ? 'allow' : entry.setting;
     for (const [value, text] of options) {
@@ -1461,13 +1591,13 @@ function savePresetFromEditor() {
   }
 
   const label =
-    (el.presetName.value ?? '').trim().slice(0, 24) || 'Custom preset';
+    (el.presetName.value ?? '').trim().slice(0, 24) || t('customPresetDefault');
   const preset = {
     id: `custom:${Date.now().toString(36)}`,
     label,
     icon: 'sliders',
     custom: true,
-    hint: `Custom preset: ${label}`,
+    hint: t('customPresetHint', label),
     values,
   };
 
@@ -1526,7 +1656,7 @@ function renderCategory(cat, target, settings) {
   const listId = `card-list-${cat.id}`;
   list.id = listId;
   head.setAttribute('aria-controls', listId);
-  card.querySelector('.card__count').textContent = String(items.length);
+  card.querySelector('.card__count').textContent = num(items.length);
 
   // Restore the saved collapsed state, then persist every toggle.
   applyCollapsed(card, Boolean(collapsedState[cat.id]));
@@ -1580,9 +1710,9 @@ function tallySettings(settings, hostInfo) {
  */
 function renderStats({ granted, blocked, dflt }) {
   const total = granted + blocked + dflt;
-  el.statGranted.textContent = String(granted);
-  el.statBlocked.textContent = String(blocked);
-  el.statDefault.textContent = String(dflt);
+  el.statGranted.textContent = num(granted);
+  el.statBlocked.textContent = num(blocked);
+  el.statDefault.textContent = num(dflt);
   el.statStrip.hidden = total === 0;
   el.meter.hidden = total === 0;
 
@@ -1605,18 +1735,16 @@ function summarize(settings, hostInfo) {
 
   const badge = el.summaryBadge;
   if (granted > 0) {
-    badge.textContent = `${granted} granted`;
+    badge.textContent = t('badgeGranted', num(granted));
     badge.className = 'badge badge--ok';
   } else {
-    badge.textContent = 'Restricted';
+    badge.textContent = t('badgeRestricted');
     badge.className = 'badge badge--deny';
   }
   badge.hidden = false;
 
   el.summaryText.textContent =
-    granted > 0
-      ? 'This site has permissions beyond the browser default. Review them below.'
-      : 'No special access granted; some capabilities are blocked on this site.';
+    granted > 0 ? t('summaryExtra') : t('summaryNone');
 }
 
 /* ==========================================================================
@@ -1669,8 +1797,8 @@ function applyFilter(rawQuery) {
     const count = card.querySelector('.card__count');
     if (count) {
       count.textContent = searching
-        ? `${cardMatches}/${total}`
-        : String(total);
+        ? `${num(cardMatches)}/${num(total)}`
+        : num(total);
     }
   }
 
@@ -1678,7 +1806,7 @@ function applyFilter(rawQuery) {
   const nothingFound = searching && visibleCards === 0;
   el.noResults.hidden = !nothingFound;
   if (nothingFound) {
-    el.noResults.textContent = `No permissions match \u201c${rawQuery.trim()}\u201d.`;
+    el.noResults.textContent = t('noResults', rawQuery.trim());
   }
 
   return { visibleCards, matches };
@@ -1705,7 +1833,7 @@ async function runAudit() {
   el.noResults.hidden = true;
   el.statStrip.hidden = true;
   el.meter.hidden = true;
-  el.siteName.textContent = 'Loading…';
+  el.siteName.textContent = t('loading');
   el.siteUrl.hidden = true;
   // Empty avatar tile while loading (the letter lands with the target).
   el.favicon.hidden = true;
@@ -1714,12 +1842,7 @@ async function runAudit() {
 
   // 2. API sanity check (guards against future Chrome changes / side-loads).
   if (!chrome.contentSettings) {
-    renderFatal(
-      new Error(
-        'chrome.contentSettings is unavailable in this browser. ' +
-          'The auditor requires a Chromium-based browser.'
-      )
-    );
+    renderFatal(new Error(t('errorNoContentSettings')));
     return;
   }
 
@@ -1742,11 +1865,11 @@ async function runAudit() {
       url
     );
     el.siteName.textContent = isExtensionPage
-      ? 'Extension or browser page'
-      : prettyUrl(url) || 'Browser page';
+      ? t('extensionPageName')
+      : prettyUrl(url) || t('browserPageName');
     el.notAuditableReason.textContent = isExtensionPage
-      ? 'This tab is an extension or browser page, so it has no per-site permissions to audit.'
-      : 'This tab is not a regular website, so it has no per-site permissions to audit.';
+      ? t('notAuditableExt')
+      : t('notAuditableOther');
     showInitial(el.siteName.textContent);
     el.skeleton.hidden = true;
     el.notAuditable.hidden = false;
@@ -1807,16 +1930,16 @@ async function runAudit() {
     renderCategory(
       {
         id: 'ext',
-        title: 'Extension Host Access',
+        title: t('catExtHost'),
         icon: 'link',
         items: [
           {
             cs: '__host__',
-            label: 'This extension on this site',
+            label: t('hostPermLabel'),
             icon: 'link',
             detail: hostInfo.allUrls
-              ? 'This extension has broad host access (declared in its manifest).'
-              : 'This extension may access this site (granted via chrome://extensions).',
+              ? t('hostPermBroad')
+              : t('hostPermGranted'),
           },
         ],
       },
@@ -1860,7 +1983,7 @@ async function runAudit() {
 /** Surface an unexpected failure in-band instead of a blank popup. */
 function renderFatal(err) {
   el.skeleton.hidden = true;
-  el.siteName.textContent = 'Unable to audit';
+  el.siteName.textContent = t('unableToAudit');
   const banner = document.createElement('div');
   banner.className = 'error-banner';
   banner.textContent = err?.message ?? String(err);

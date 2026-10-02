@@ -12,7 +12,8 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
+// The script lives in tools/preview/, so the repo root is two levels up.
+const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const HARNESS = join(ROOT, 'tools/preview', 'preview.html');
 const PORT = Number(process.argv[2] ?? process.env.PORT ?? 4173);
 

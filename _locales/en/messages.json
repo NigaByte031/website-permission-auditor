@@ -1,0 +1,451 @@
+{
+  "extName": {
+    "message": "Website Permission Auditor",
+    "description": "Extension name in the toolbar, chrome://extensions and the Web Store."
+  },
+  "extShortName": {
+    "message": "Permission Auditor",
+    "description": "Short extension name shown when space is tight."
+  },
+  "extDescription": {
+    "message": "Audit camera, microphone, location, notifications, clipboard and host access for the site you are viewing.",
+    "description": "Extension description in chrome://extensions and the Web Store."
+  },
+
+  "loading": {
+    "message": "Loading…",
+    "description": "Placeholder shown while the audit runs."
+  },
+  "unableToAudit": {
+    "message": "Unable to audit",
+    "description": "Header shown when the audit could not run."
+  },
+  "errorNoContentSettings": {
+    "message": "chrome.contentSettings is unavailable in this browser. The auditor requires a Chromium-based browser.",
+    "description": "Fatal error shown when the contentSettings API is missing."
+  },
+
+  "themeGroupLabel": {
+    "message": "Color theme",
+    "description": "Accessible name of the System/Light/Dark theme toggle group."
+  },
+  "themeSystem": {
+    "message": "Follow system theme",
+    "description": "Title and accessible name of the 'system' theme button."
+  },
+  "themeLight": {
+    "message": "Light theme",
+    "description": "Title and accessible name of the 'light' theme button."
+  },
+  "themeDark": {
+    "message": "Dark theme",
+    "description": "Title and accessible name of the 'dark' theme button."
+  },
+
+  "statGranted": {
+    "message": "Granted",
+    "description": "Header tally label for granted permissions."
+  },
+  "statBlocked": {
+    "message": "Blocked",
+    "description": "Header tally label for blocked permissions."
+  },
+  "statDefault": {
+    "message": "On ask",
+    "description": "Header tally label for permissions still on the browser default."
+  },
+  "badgeGranted": {
+    "message": "$1 granted",
+    "description": "Header badge; $1 is the number of granted permissions."
+  },
+  "badgeRestricted": {
+    "message": "Restricted",
+    "description": "Header badge shown when nothing is granted."
+  },
+  "summaryExtra": {
+    "message": "This site has permissions beyond the browser default. Review them below.",
+    "description": "Header summary line when at least one permission is granted."
+  },
+  "summaryNone": {
+    "message": "No special access granted; some capabilities are blocked on this site.",
+    "description": "Header summary line when nothing is granted."
+  },
+
+  "filterPlaceholder": {
+    "message": "Filter permissions…",
+    "description": "Placeholder of the permission filter box."
+  },
+  "filterLabel": {
+    "message": "Filter permission rows",
+    "description": "Accessible name of the permission filter box."
+  },
+  "filterClear": {
+    "message": "Clear filter",
+    "description": "Accessible name of the filter clear button."
+  },
+  "noResults": {
+    "message": "No permissions match “$1”.",
+    "description": "Shown when the filter matches nothing; $1 is the query."
+  },
+
+  "presetsGroupLabel": {
+    "message": "Site permission presets",
+    "description": "Accessible name of the preset section."
+  },
+  "presetsTitle": {
+    "message": "Apply a profile",
+    "description": "Visible title of the preset section."
+  },
+  "profilesToolbarLabel": {
+    "message": "Permission profiles",
+    "description": "Accessible name of the preset button toolbar."
+  },
+  "presetPreviewLabel": {
+    "message": "Preset preview",
+    "description": "Accessible name of the preset confirmation panel."
+  },
+  "presetEditorLabel": {
+    "message": "Custom preset editor",
+    "description": "Accessible name of the custom preset editor."
+  },
+  "presetNameLabel": {
+    "message": "Preset name",
+    "description": "Label of the custom preset name field."
+  },
+  "presetNamePlaceholder": {
+    "message": "My profile",
+    "description": "Placeholder of the custom preset name field."
+  },
+  "presetSave": {
+    "message": "Save preset",
+    "description": "Custom preset editor save button."
+  },
+  "presetCancel": {
+    "message": "Cancel",
+    "description": "Cancel button in the preset preview and editor."
+  },
+  "close": {
+    "message": "Close",
+    "description": "Close button in the preset preview when there is nothing to apply."
+  },
+  "presetDelete": {
+    "message": "Delete preset",
+    "description": "Delete button for a custom preset."
+  },
+  "newPreset": {
+    "message": "New preset",
+    "description": "Button that opens the custom preset editor."
+  },
+  "newPresetTitle": {
+    "message": "Create a custom preset from this site’s permissions",
+    "description": "Tooltip of the 'New preset' button."
+  },
+  "customPresetDefault": {
+    "message": "Custom preset",
+    "description": "Fallback name for a custom preset with no name."
+  },
+  "customPresetHint": {
+    "message": "Custom preset: $1",
+    "description": "Tooltip of a custom preset button; $1 is its name."
+  },
+
+  "presetLockdown": {
+    "message": "Lock down",
+    "description": "Built-in preset button label."
+  },
+  "presetLockdownHint": {
+    "message": "Block camera, microphone, location, notifications, clipboard and automatic downloads.",
+    "description": "Tooltip of the 'Lock down' preset."
+  },
+  "presetBalanced": {
+    "message": "Balanced",
+    "description": "Built-in preset button label."
+  },
+  "presetBalancedHint": {
+    "message": "Reset every permission on this site back to the browser default.",
+    "description": "Tooltip of the 'Balanced' preset."
+  },
+  "presetAllowCamera": {
+    "message": "Allow camera",
+    "description": "Built-in preset button label."
+  },
+  "presetAllowCameraHint": {
+    "message": "Grant camera access and reset everything else to the browser default.",
+    "description": "Tooltip of the 'Allow camera' preset."
+  },
+
+  "previewChangeOne": {
+    "message": " will change 1 permission:",
+    "description": "Confirmation sentence when a preset changes exactly one permission."
+  },
+  "previewChangeMany": {
+    "message": " will change $1 permissions:",
+    "description": "Confirmation sentence; $1 is the number of permissions that change."
+  },
+  "previewNothing": {
+    "message": " has nothing to change — this site already matches.",
+    "description": "Confirmation sentence when a preset would change nothing."
+  },
+  "previewApplyOne": {
+    "message": "Apply to 1 setting",
+    "description": "Confirm button when a preset changes exactly one setting."
+  },
+  "previewApplyMany": {
+    "message": "Apply to $1 settings",
+    "description": "Confirm button; $1 is the number of settings that change."
+  },
+  "previewFlowLabel": {
+    "message": "$1 to $2",
+    "description": "Spoken form of a 'current -> new' row; $1 is the current value, $2 the new one."
+  },
+  "presetAppliedOne": {
+    "message": "$1 applied to 1 setting",
+    "description": "Undo entry label; $1 is the preset name."
+  },
+  "presetAppliedMany": {
+    "message": "$1 applied to $2 settings",
+    "description": "Undo entry label; $1 is the preset name, $2 the number of settings."
+  },
+
+  "editorTarget": {
+    "message": "$1 target",
+    "description": "Accessible name of a preset editor select; $1 is the permission name."
+  },
+  "optDefault": {
+    "message": "Default",
+    "description": "Preset editor option: leave the browser default."
+  },
+  "optAllow": {
+    "message": "Allow",
+    "description": "Preset editor option: allow."
+  },
+  "optBlock": {
+    "message": "Block",
+    "description": "Preset editor option: block."
+  },
+  "optAsk": {
+    "message": "Ask",
+    "description": "Preset editor option: ask every time."
+  },
+
+  "undo": {
+    "message": "Undo",
+    "description": "Undo button in the action bar."
+  },
+  "undoMore": {
+    "message": " (+$1 more)",
+    "description": "Suffix added to the undo label; $1 is the number of older entries."
+  },
+  "resetSite": {
+    "message": "Reset this site",
+    "description": "Site-wide reset button."
+  },
+  "resetting": {
+    "message": "Resetting…",
+    "description": "Busy label of the site-wide reset button."
+  },
+  "allReset": {
+    "message": "All permissions reset to defaults",
+    "description": "Undo entry label for a site-wide reset."
+  },
+
+  "working": {
+    "message": "Working…",
+    "description": "Busy label of a permission action button."
+  },
+  "failedRetry": {
+    "message": "Failed - retry",
+    "description": "Error label of a permission action button."
+  },
+  "labelGranted": {
+    "message": "$1 granted",
+    "description": "Undo label for granting a host permission; $1 is the row name."
+  },
+  "labelRevoked": {
+    "message": "$1 revoked",
+    "description": "Undo label for revoking a host permission; $1 is the row name."
+  },
+  "labelEnabled": {
+    "message": "$1 enabled",
+    "description": "Undo label for enabling a permission; $1 is the row name."
+  },
+  "labelDisabled": {
+    "message": "$1 disabled",
+    "description": "Undo label for disabling a permission; $1 is the row name."
+  },
+  "labelReset": {
+    "message": "$1 reset",
+    "description": "Undo label for resetting a permission; $1 is the row name."
+  },
+
+  "enable": {
+    "message": "Enable",
+    "description": "'Allow' action button on a permission row."
+  },
+  "disable": {
+    "message": "Disable",
+    "description": "'Block' action button on a permission row."
+  },
+  "reset": {
+    "message": "Reset",
+    "description": "'Restore default' action button on a permission row."
+  },
+
+  "allClearTitle": {
+    "message": "All clear",
+    "description": "Title of the friendly empty state."
+  },
+  "allClearSub": {
+    "message": "No special permissions granted to this site.",
+    "description": "Subtitle of the friendly empty state."
+  },
+
+  "notAuditableTitle": {
+    "message": "Nothing to audit here",
+    "description": "Title of the notice shown for non-web pages."
+  },
+  "notAuditableDefault": {
+    "message": "This page is a browser or extension page, so it has no website permissions.",
+    "description": "Static notice body in popup.html."
+  },
+  "notAuditableExt": {
+    "message": "This tab is an extension or browser page, so it has no per-site permissions to audit.",
+    "description": "Notice body for chrome:// and extension pages."
+  },
+  "notAuditableOther": {
+    "message": "This tab is not a regular website, so it has no per-site permissions to audit.",
+    "description": "Notice body for other non-web tabs."
+  },
+  "extensionPageName": {
+    "message": "Extension or browser page",
+    "description": "Site name shown for extension/browser pages."
+  },
+  "browserPageName": {
+    "message": "Browser page",
+    "description": "Site name shown for other non-web pages."
+  },
+
+  "footerHint": {
+    "message": "Audits only this tab's site settings.",
+    "description": "Footer privacy hint."
+  },
+  "chromeSettingsLink": {
+    "message": "Chrome settings ↗",
+    "description": "Footer link that opens Chrome's site settings."
+  },
+
+  "catHardware": {
+    "message": "Hardware",
+    "description": "Category card title."
+  },
+  "catLocation": {
+    "message": "Location",
+    "description": "Category card title."
+  },
+  "catNotifications": {
+    "message": "Notifications",
+    "description": "Category card title."
+  },
+  "catData": {
+    "message": "Data & Clipboard",
+    "description": "Category card title."
+  },
+  "catHost": {
+    "message": "Site Data / Host Access",
+    "description": "Category card title."
+  },
+  "catExtHost": {
+    "message": "Extension Host Access",
+    "description": "Category card title for this extension's own host permission."
+  },
+
+  "permCamera": { "message": "Camera", "description": "Permission row label." },
+  "permCameraDetail": {
+    "message": "Use your camera to capture video.",
+    "description": "Permission row description."
+  },
+  "permMicrophone": { "message": "Microphone", "description": "Permission row label." },
+  "permMicrophoneDetail": {
+    "message": "Use your microphone to capture audio.",
+    "description": "Permission row description."
+  },
+  "permGeolocation": { "message": "Geolocation", "description": "Permission row label." },
+  "permGeolocationDetail": {
+    "message": "Read your physical location.",
+    "description": "Permission row description."
+  },
+  "permNotifications": { "message": "Notifications", "description": "Permission row label." },
+  "permNotificationsDetail": {
+    "message": "Show desktop notifications.",
+    "description": "Permission row description."
+  },
+  "permClipboard": { "message": "Clipboard", "description": "Permission row label." },
+  "permClipboardDetail": {
+    "message": "Use advanced clipboard capabilities (read, custom writes).",
+    "description": "Permission row description."
+  },
+  "permCookies": { "message": "Cookies & site data", "description": "Permission row label." },
+  "permCookiesDetail": {
+    "message": "Store cookies and other local data.",
+    "description": "Permission row description."
+  },
+  "permDownloads": { "message": "Automatic downloads", "description": "Permission row label." },
+  "permDownloadsDetail": {
+    "message": "Download multiple files without asking each time.",
+    "description": "Permission row description."
+  },
+  "permJavascript": { "message": "JavaScript", "description": "Permission row label." },
+  "permJavascriptDetail": {
+    "message": "Run JavaScript on this site.",
+    "description": "Permission row description."
+  },
+  "permImages": { "message": "Images", "description": "Permission row label." },
+  "permImagesDetail": {
+    "message": "Load and display images.",
+    "description": "Permission row description."
+  },
+  "permSound": { "message": "Sound", "description": "Permission row label." },
+  "permSoundDetail": {
+    "message": "Play audio without being muted.",
+    "description": "Permission row description."
+  },
+  "permPopups": { "message": "Pop-ups", "description": "Permission row label." },
+  "permPopupsDetail": {
+    "message": "Open new browser windows and tabs.",
+    "description": "Permission row description."
+  },
+
+  "hostPermLabel": {
+    "message": "This extension on this site",
+    "description": "Label of this extension's own host-access row."
+  },
+  "hostPermBroad": {
+    "message": "This extension has broad host access (declared in its manifest).",
+    "description": "Description of a wildcard host grant."
+  },
+  "hostPermGranted": {
+    "message": "This extension may access this site (granted via chrome://extensions).",
+    "description": "Description of a per-site host grant."
+  },
+
+  "statusAllowed": {
+    "message": "Allowed",
+    "description": "Effective value of an 'allow' content setting."
+  },
+  "statusBlocked": {
+    "message": "Blocked",
+    "description": "Effective value of a 'block' content setting."
+  },
+  "statusAsk": {
+    "message": "Ask (default)",
+    "description": "Effective value of an 'ask' content setting."
+  },
+  "statusSession": {
+    "message": "Allowed (this session)",
+    "description": "Effective value of a 'session_only' content setting."
+  },
+  "statusUnknown": {
+    "message": "Unknown",
+    "description": "Effective value when the API could not resolve a setting."
+  }
+}

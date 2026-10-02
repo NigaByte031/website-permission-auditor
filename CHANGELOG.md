@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Arabic (`ar`) locale: a complete `_locales/ar/messages.json` mirroring the
+  English and Persian key set. Arabic joins Persian as a right-to-left
+  language, so the popup mirrors its layout and renders counts in
+  Arabic-Indic numerals (`٠١٢٣`).
+- A **Supported languages** section in the README documenting the shipped
+  locales, their text direction and numerals, and how to add a new language.
+
+### Changed
+
+- `popup.js` digit formatting and localisation notes now cover Arabic
+  alongside Persian.
+
 ## [1.1.0] - 2026-10-01
 
 ### Added

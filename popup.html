@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="color-scheme" content="light dark" />
-    <title>Website Permission Auditor</title>
+    <title data-i18n="extName">Website Permission Auditor</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
@@ -18,7 +18,9 @@
         </span>
 
         <span class="identity__text">
-          <span id="siteName" class="identity__name">Loading&hellip;</span>
+          <span id="siteName" class="identity__name" data-i18n="loading"
+            >Loading&hellip;</span
+          >
           <span id="siteUrl" class="identity__url" hidden></span>
         </span>
 
@@ -31,6 +33,7 @@
           class="theme-toggle"
           role="group"
           aria-label="Color theme"
+          data-i18n-aria="themeGroupLabel"
         >
           <button
             class="theme-toggle__btn"
@@ -39,6 +42,8 @@
             aria-pressed="true"
             title="Follow system theme"
             aria-label="Follow system theme"
+            data-i18n-title="themeSystem"
+            data-i18n-aria="themeSystem"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
               <rect x="2.8" y="4.2" width="18.4" height="12.6" rx="2.6" />
@@ -52,6 +57,8 @@
             aria-pressed="false"
             title="Light theme"
             aria-label="Light theme"
+            data-i18n-title="themeLight"
+            data-i18n-aria="themeLight"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
               <circle cx="12" cy="12" r="4.3" />
@@ -65,6 +72,8 @@
             aria-pressed="false"
             title="Dark theme"
             aria-label="Dark theme"
+            data-i18n-title="themeDark"
+            data-i18n-aria="themeDark"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
               <path d="M20.4 14.1A8.5 8.5 0 0 1 9.9 3.6a8.5 8.5 0 1 0 10.5 10.5Z" />
@@ -84,15 +93,15 @@
       <div class="tally" id="statStrip" hidden>
         <span class="tally__item tally__item--granted">
           <span class="tally__value" id="statGranted">0</span>
-          <span class="tally__label">Granted</span>
+          <span class="tally__label" data-i18n="statGranted">Granted</span>
         </span>
         <span class="tally__item tally__item--blocked">
           <span class="tally__value" id="statBlocked">0</span>
-          <span class="tally__label">Blocked</span>
+          <span class="tally__label" data-i18n="statBlocked">Blocked</span>
         </span>
         <span class="tally__item tally__item--default">
           <span class="tally__value" id="statDefault">0</span>
-          <span class="tally__label">On ask</span>
+          <span class="tally__label" data-i18n="statDefault">On ask</span>
         </span>
       </div>
 
@@ -136,9 +145,11 @@
           class="search__input"
           type="search"
           placeholder="Filter permissions…"
+          data-i18n-placeholder="filterPlaceholder"
           autocomplete="off"
           spellcheck="false"
           aria-label="Filter permission rows"
+          data-i18n-aria="filterLabel"
           aria-controls="categories"
         />
         <button
@@ -146,6 +157,7 @@
           class="search__clear"
           type="button"
           aria-label="Clear filter"
+          data-i18n-aria="filterClear"
           hidden
         >
           ✕
@@ -160,9 +172,10 @@
         id="presets"
         role="group"
         aria-label="Site permission presets"
+        data-i18n-aria="presetsGroupLabel"
         hidden
       >
-        <span class="presets__title">Apply a profile</span>
+        <span class="presets__title" data-i18n="presetsTitle">Apply a profile</span>
         <div class="presets__row" id="presetsRow"></div>
 
         <!-- Confirmation panel: lists the exact rows a preset would change
@@ -172,6 +185,7 @@
           id="presetPreview"
           role="region"
           aria-label="Preset preview"
+          data-i18n-aria="presetPreviewLabel"
           aria-live="polite"
           tabindex="-1"
           hidden
@@ -185,11 +199,14 @@
           id="presetEditor"
           role="region"
           aria-label="Custom preset editor"
+          data-i18n-aria="presetEditorLabel"
           tabindex="-1"
           hidden
         >
           <label class="preset-editor__field">
-            <span class="preset-editor__field-label">Preset name</span>
+            <span class="preset-editor__field-label" data-i18n="presetNameLabel"
+              >Preset name</span
+            >
             <input
               id="presetName"
               class="preset-editor__input"
@@ -198,17 +215,24 @@
               autocomplete="off"
               spellcheck="false"
               placeholder="My profile"
+              data-i18n-placeholder="presetNamePlaceholder"
             />
           </label>
           <ul class="preset-editor__list" id="presetEditorList"></ul>
           <div class="preset-editor__actions">
-            <button class="preset-editor__save" id="presetSaveBtn" type="button">
+            <button
+              class="preset-editor__save"
+              id="presetSaveBtn"
+              type="button"
+              data-i18n="presetSave"
+            >
               Save preset
             </button>
             <button
               class="preset-editor__cancel"
               id="presetCancelBtn"
               type="button"
+              data-i18n="presetCancel"
             >
               Cancel
             </button>
@@ -220,9 +244,16 @@
       <div class="actions-bar" id="actionsBar" hidden>
         <div class="undo" id="undoBar" role="status" hidden>
           <span class="undo__text" id="undoText"></span>
-          <button class="undo__btn" id="undoBtn" type="button">Undo</button>
+          <button class="undo__btn" id="undoBtn" type="button" data-i18n="undo">
+            Undo
+          </button>
         </div>
-        <button class="reset-site" id="resetSiteBtn" type="button">
+        <button
+          class="reset-site"
+          id="resetSiteBtn"
+          type="button"
+          data-i18n="resetSite"
+        >
           Reset this site
         </button>
       </div>
@@ -235,8 +266,8 @@
             <path d="m8.8 11.9 2.3 2.3 4.3-4.6" />
           </svg>
         </span>
-        <strong class="all-clear__title">All clear</strong>
-        <span class="all-clear__sub"
+        <strong class="all-clear__title" data-i18n="allClearTitle">All clear</strong>
+        <span class="all-clear__sub" data-i18n="allClearSub"
           >No special permissions granted to this site.</span
         >
       </section>
@@ -249,8 +280,8 @@
 
       <!-- Shown only for chrome://, extension pages, etc. -->
       <section id="notAuditable" class="notice notice--warn" hidden>
-        <strong>Nothing to audit here</strong>
-        <span id="notAuditableReason"
+        <strong data-i18n="notAuditableTitle">Nothing to audit here</strong>
+        <span id="notAuditableReason" data-i18n="notAuditableDefault"
           >This page is a browser or extension page, so it has no website
           permissions.</span
         >
@@ -259,10 +290,14 @@
 
     <footer class="footer">
       <span class="footer__hint">
-        Audits only this tab's site settings.
+        <span data-i18n="footerHint">Audits only this tab's site settings.</span>
         <span class="footer__version" id="versionChip" hidden></span>
       </span>
-      <a id="chromeSettingsLink" class="footer__link" href="#"
+      <a
+        id="chromeSettingsLink"
+        class="footer__link"
+        href="#"
+        data-i18n="chromeSettingsLink"
         >Chrome settings ↗</a
       >
     </footer>
@@ -314,6 +349,7 @@
               type="button"
               data-action="allow"
               aria-pressed="false"
+              data-i18n="enable"
             >
               Enable
             </button>
@@ -322,6 +358,7 @@
               type="button"
               data-action="block"
               aria-pressed="false"
+              data-i18n="disable"
             >
               Disable
             </button>
@@ -329,6 +366,7 @@
               class="perm__action perm__action--reset"
               type="button"
               data-action="reset"
+              data-i18n="reset"
               hidden
             >
               Reset

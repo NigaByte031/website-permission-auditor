@@ -34,6 +34,7 @@ nothing but one UI preference.
 - [Enable/disable/reset semantics](#enabledisablereset-semantics)
 - [Manifest permissions and why](#manifest-permissions-and-why)
 - [Privacy](#privacy)
+- [Supported languages](#supported-languages)
 - [Compatibility](#compatibility)
 - [Project layout](#project-layout)
 - [Development](#development)
@@ -66,6 +67,9 @@ nothing but one UI preference.
   change all your data" warning.
 - **Light and dark.** The whole UI is themed with CSS custom properties and
   follows the OS via `prefers-color-scheme`.
+- **Speaks your language.** Ships in English, Persian and Arabic, follows the
+  browser's UI language and mirrors the whole layout right-to-left for the
+  right-to-left locales.
 
 ## Install
 
@@ -183,6 +187,30 @@ persisted value is the collapsed-card map in `chrome.storage.local`.
   `XMLHttpRequest`, `WebSocket`, `EventSource`, `sendBeacon` or
   `importScripts`.
 
+## Supported languages
+
+The popup follows the browser's UI language through `chrome.i18n`. Every
+user-visible string lives in `_locales/<locale>/messages.json`, resolved with
+`chrome.i18n.getMessage()`, and falls back to English when no locale matches.
+
+| Locale | Language | Direction | Numerals |
+|---|---|---|---|
+| `en` | English (default) | left-to-right | `0123` |
+| `fa` | Persian | right-to-left | `۰۱۲۳` |
+| `ar` | Arabic | right-to-left | `٠١٢٣` |
+
+Right-to-left locales flip the entire popup layout (the document `dir` is set
+before the first paint), and counts are rendered in each locale's own numerals.
+
+Adding a language:
+
+1. Copy `_locales/en/messages.json` to `_locales/<locale>/messages.json` and
+   translate the `message` values, keeping every `$1`…`$9` placeholder.
+2. Add the language's primary subtag to `RTL_LANGS` in `popup.js` if it is
+   written right to left, and to `num()` if it uses non-Western digits.
+3. Run `npm test` — it enforces the same key set and placeholders across all
+   locales, so a missing or extra key fails the build.
+
 ## Compatibility
 
 | Browser | Status |
@@ -200,6 +228,10 @@ popup.html               Semantic popup markup (templates for cards/rows)
 popup.css                Card-based UI, CSS variables, automatic dark mode
 popup.js                 Audit logic + rendering + live row filter (ES2022+)
 background.js            Service worker: live toolbar badge for the active tab
+_locales/
+  en/messages.json       Default locale strings
+  fa/messages.json       Persian strings
+  ar/messages.json       Arabic strings
 icons/
   generate-icons.mjs     Dev-time icon generator (add --all for an alternate
                          orange "attention" artwork)
@@ -249,6 +281,9 @@ Conventions and PR expectations live in [CONTRIBUTING.md](CONTRIBUTING.md).
 - `chrome://settings`, the Chrome Web Store, `about:blank`, DevTools windows →
   "Nothing to audit here" notice, no badge.
 - OS light/dark mode → popup follows automatically via `prefers-color-scheme`.
+- Set the browser UI language to Persian or Arabic → the popup is fully
+  translated, counts use that locale's numerals and the layout mirrors
+  right-to-left.
 - Collapse a category card → chevron rotates and the body animates shut;
   close and reopen the popup (or reload) → the same cards are still collapsed.
 - Type in the filter box → rows narrow instantly, empty cards disappear, the
@@ -268,6 +303,8 @@ Conventions and PR expectations live in [CONTRIBUTING.md](CONTRIBUTING.md).
 - The audit reports what the browser stores per origin. It cannot see what a
   site does with a permission after you grant it in a page dialog, and it does
   not observe third-party iframes individually.
+- Localisation is driven by Chrome's UI language; the extension offers no
+  in-popup language switcher.
 
 ## Contributing
 

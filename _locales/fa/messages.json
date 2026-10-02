@@ -1,0 +1,451 @@
+{
+  "extName": {
+    "message": "حسابرس مجوزهای وب‌سایت",
+    "description": "Extension name in the toolbar, chrome://extensions and the Web Store."
+  },
+  "extShortName": {
+    "message": "حسابرس مجوزها",
+    "description": "Short extension name shown when space is tight."
+  },
+  "extDescription": {
+    "message": "مجوزهای دوربین، میکروفون، موقعیت مکانی، اعلان‌ها، کلیپ‌بورد و دسترسی میزبان سایتی را که مشاهده می‌کنید بررسی کنید.",
+    "description": "Extension description in chrome://extensions and the Web Store."
+  },
+
+  "loading": {
+    "message": "در حال بارگذاری…",
+    "description": "Placeholder shown while the audit runs."
+  },
+  "unableToAudit": {
+    "message": "امکان بررسی وجود ندارد",
+    "description": "Header shown when the audit could not run."
+  },
+  "errorNoContentSettings": {
+    "message": "در این مرورگر chrome.contentSettings در دسترس نیست. این ابزار به یک مرورگر مبتنی بر کرومیوم نیاز دارد.",
+    "description": "Fatal error shown when the contentSettings API is missing."
+  },
+
+  "themeGroupLabel": {
+    "message": "پوسته رنگی",
+    "description": "Accessible name of the System/Light/Dark theme toggle group."
+  },
+  "themeSystem": {
+    "message": "پیروی از سیستم",
+    "description": "Title and accessible name of the 'system' theme button."
+  },
+  "themeLight": {
+    "message": "پوسته روشن",
+    "description": "Title and accessible name of the 'light' theme button."
+  },
+  "themeDark": {
+    "message": "پوسته تیره",
+    "description": "Title and accessible name of the 'dark' theme button."
+  },
+
+  "statGranted": {
+    "message": "مجوز داده‌شده",
+    "description": "Header tally label for granted permissions."
+  },
+  "statBlocked": {
+    "message": "مسدود",
+    "description": "Header tally label for blocked permissions."
+  },
+  "statDefault": {
+    "message": "با پرسش",
+    "description": "Header tally label for permissions still on the browser default."
+  },
+  "badgeGranted": {
+    "message": "$1 مجوز داده‌شده",
+    "description": "Header badge; $1 is the number of granted permissions."
+  },
+  "badgeRestricted": {
+    "message": "محدود",
+    "description": "Header badge shown when nothing is granted."
+  },
+  "summaryExtra": {
+    "message": "این سایت فراتر از پیش‌فرض مرورگر مجوز دارد. در ادامه آن‌ها را بازبینی کنید.",
+    "description": "Header summary line when at least one permission is granted."
+  },
+  "summaryNone": {
+    "message": "هیچ دسترسی ویژه‌ای داده نشده است؛ برخی قابلیت‌ها در این سایت مسدود هستند.",
+    "description": "Header summary line when nothing is granted."
+  },
+
+  "filterPlaceholder": {
+    "message": "فیلتر مجوزها…",
+    "description": "Placeholder of the permission filter box."
+  },
+  "filterLabel": {
+    "message": "فیلتر ردیف‌های مجوز",
+    "description": "Accessible name of the permission filter box."
+  },
+  "filterClear": {
+    "message": "پاک کردن فیلتر",
+    "description": "Accessible name of the filter clear button."
+  },
+  "noResults": {
+    "message": "هیچ مجوزی با «$1» مطابقت ندارد.",
+    "description": "Shown when the filter matches nothing; $1 is the query."
+  },
+
+  "presetsGroupLabel": {
+    "message": "قالب‌های مجوز سایت",
+    "description": "Accessible name of the preset section."
+  },
+  "presetsTitle": {
+    "message": "اعمال یک پروفایل",
+    "description": "Visible title of the preset section."
+  },
+  "profilesToolbarLabel": {
+    "message": "پروفایل‌های مجوز",
+    "description": "Accessible name of the preset button toolbar."
+  },
+  "presetPreviewLabel": {
+    "message": "پیش‌نمایش قالب",
+    "description": "Accessible name of the preset confirmation panel."
+  },
+  "presetEditorLabel": {
+    "message": "ویرایشگر قالب سفارشی",
+    "description": "Accessible name of the custom preset editor."
+  },
+  "presetNameLabel": {
+    "message": "نام قالب",
+    "description": "Label of the custom preset name field."
+  },
+  "presetNamePlaceholder": {
+    "message": "پروفایل من",
+    "description": "Placeholder of the custom preset name field."
+  },
+  "presetSave": {
+    "message": "ذخیره قالب",
+    "description": "Custom preset editor save button."
+  },
+  "presetCancel": {
+    "message": "انصراف",
+    "description": "Cancel button in the preset preview and editor."
+  },
+  "close": {
+    "message": "بستن",
+    "description": "Close button in the preset preview when there is nothing to apply."
+  },
+  "presetDelete": {
+    "message": "حذف قالب",
+    "description": "Delete button for a custom preset."
+  },
+  "newPreset": {
+    "message": "قالب جدید",
+    "description": "Button that opens the custom preset editor."
+  },
+  "newPresetTitle": {
+    "message": "ساخت قالب سفارشی از مجوزهای این سایت",
+    "description": "Tooltip of the 'New preset' button."
+  },
+  "customPresetDefault": {
+    "message": "قالب سفارشی",
+    "description": "Fallback name for a custom preset with no name."
+  },
+  "customPresetHint": {
+    "message": "قالب سفارشی: $1",
+    "description": "Tooltip of a custom preset button; $1 is its name."
+  },
+
+  "presetLockdown": {
+    "message": "قفل کامل",
+    "description": "Built-in preset button label."
+  },
+  "presetLockdownHint": {
+    "message": "دوربین، میکروفون، موقعیت مکانی، اعلان‌ها، کلیپ‌بورد و دانلودهای خودکار را مسدود کن.",
+    "description": "Tooltip of the 'Lock down' preset."
+  },
+  "presetBalanced": {
+    "message": "متعادل",
+    "description": "Built-in preset button label."
+  },
+  "presetBalancedHint": {
+    "message": "بازگرداندن همه مجوزهای این سایت به پیش‌فرض مرورگر.",
+    "description": "Tooltip of the 'Balanced' preset."
+  },
+  "presetAllowCamera": {
+    "message": "اجازه دوربین",
+    "description": "Built-in preset button label."
+  },
+  "presetAllowCameraHint": {
+    "message": "دسترسی دوربین را بده و بقیه را به پیش‌فرض مرورگر بازگردان.",
+    "description": "Tooltip of the 'Allow camera' preset."
+  },
+
+  "previewChangeOne": {
+    "message": " ۱ مجوز را تغییر می‌دهد:",
+    "description": "Confirmation sentence when a preset changes exactly one permission."
+  },
+  "previewChangeMany": {
+    "message": " $1 مجوز را تغییر می‌دهد:",
+    "description": "Confirmation sentence; $1 is the number of permissions that change."
+  },
+  "previewNothing": {
+    "message": " چیزی برای تغییر ندارد؛ این سایت از قبل منطبق است.",
+    "description": "Confirmation sentence when a preset would change nothing."
+  },
+  "previewApplyOne": {
+    "message": "اعمال برای ۱ تنظیم",
+    "description": "Confirm button when a preset changes exactly one setting."
+  },
+  "previewApplyMany": {
+    "message": "اعمال برای $1 تنظیم",
+    "description": "Confirm button; $1 is the number of settings that change."
+  },
+  "previewFlowLabel": {
+    "message": "از $1 به $2",
+    "description": "Spoken form of a 'current -> new' row; $1 is the current value, $2 the new one."
+  },
+  "presetAppliedOne": {
+    "message": "$1 روی ۱ تنظیم اعمال شد",
+    "description": "Undo entry label; $1 is the preset name."
+  },
+  "presetAppliedMany": {
+    "message": "$1 روی $2 تنظیم اعمال شد",
+    "description": "Undo entry label; $1 is the preset name, $2 the number of settings."
+  },
+
+  "editorTarget": {
+    "message": "هدف $1",
+    "description": "Accessible name of a preset editor select; $1 is the permission name."
+  },
+  "optDefault": {
+    "message": "پیش‌فرض",
+    "description": "Preset editor option: leave the browser default."
+  },
+  "optAllow": {
+    "message": "مجاز",
+    "description": "Preset editor option: allow."
+  },
+  "optBlock": {
+    "message": "مسدود",
+    "description": "Preset editor option: block."
+  },
+  "optAsk": {
+    "message": "پرسش",
+    "description": "Preset editor option: ask every time."
+  },
+
+  "undo": {
+    "message": "بازگردانی",
+    "description": "Undo button in the action bar."
+  },
+  "undoMore": {
+    "message": " (+$1 مورد دیگر)",
+    "description": "Suffix added to the undo label; $1 is the number of older entries."
+  },
+  "resetSite": {
+    "message": "بازنشانی این سایت",
+    "description": "Site-wide reset button."
+  },
+  "resetting": {
+    "message": "در حال بازنشانی…",
+    "description": "Busy label of the site-wide reset button."
+  },
+  "allReset": {
+    "message": "همه مجوزها به پیش‌فرض بازنشانی شد",
+    "description": "Undo entry label for a site-wide reset."
+  },
+
+  "working": {
+    "message": "در حال انجام…",
+    "description": "Busy label of a permission action button."
+  },
+  "failedRetry": {
+    "message": "ناموفق — دوباره",
+    "description": "Error label of a permission action button."
+  },
+  "labelGranted": {
+    "message": "$1 داده شد",
+    "description": "Undo label for granting a host permission; $1 is the row name."
+  },
+  "labelRevoked": {
+    "message": "$1 پس گرفته شد",
+    "description": "Undo label for revoking a host permission; $1 is the row name."
+  },
+  "labelEnabled": {
+    "message": "$1 فعال شد",
+    "description": "Undo label for enabling a permission; $1 is the row name."
+  },
+  "labelDisabled": {
+    "message": "$1 غیرفعال شد",
+    "description": "Undo label for disabling a permission; $1 is the row name."
+  },
+  "labelReset": {
+    "message": "$1 بازنشانی شد",
+    "description": "Undo label for resetting a permission; $1 is the row name."
+  },
+
+  "enable": {
+    "message": "فعال",
+    "description": "'Allow' action button on a permission row."
+  },
+  "disable": {
+    "message": "غیرفعال",
+    "description": "'Block' action button on a permission row."
+  },
+  "reset": {
+    "message": "بازنشانی",
+    "description": "'Restore default' action button on a permission row."
+  },
+
+  "allClearTitle": {
+    "message": "همه‌چیز مرتب است",
+    "description": "Title of the friendly empty state."
+  },
+  "allClearSub": {
+    "message": "هیچ مجوز ویژه‌ای به این سایت داده نشده است.",
+    "description": "Subtitle of the friendly empty state."
+  },
+
+  "notAuditableTitle": {
+    "message": "اینجا چیزی برای بررسی نیست",
+    "description": "Title of the notice shown for non-web pages."
+  },
+  "notAuditableDefault": {
+    "message": "این صفحه یک صفحه مرورگر یا افزونه است و مجوز وب‌سایتی ندارد.",
+    "description": "Static notice body in popup.html."
+  },
+  "notAuditableExt": {
+    "message": "این برگه یک صفحه افزونه یا مرورگر است، بنابراین مجوزی برای بررسی ندارد.",
+    "description": "Notice body for chrome:// and extension pages."
+  },
+  "notAuditableOther": {
+    "message": "این برگه یک وب‌سایت معمولی نیست، بنابراین مجوزی برای بررسی ندارد.",
+    "description": "Notice body for other non-web tabs."
+  },
+  "extensionPageName": {
+    "message": "صفحه افزونه یا مرورگر",
+    "description": "Site name shown for extension/browser pages."
+  },
+  "browserPageName": {
+    "message": "صفحه مرورگر",
+    "description": "Site name shown for other non-web pages."
+  },
+
+  "footerHint": {
+    "message": "فقط تنظیمات سایت همین برگه بررسی می‌شود.",
+    "description": "Footer privacy hint."
+  },
+  "chromeSettingsLink": {
+    "message": "تنظیمات کروم ↗",
+    "description": "Footer link that opens Chrome's site settings."
+  },
+
+  "catHardware": {
+    "message": "سخت‌افزار",
+    "description": "Category card title."
+  },
+  "catLocation": {
+    "message": "موقعیت مکانی",
+    "description": "Category card title."
+  },
+  "catNotifications": {
+    "message": "اعلان‌ها",
+    "description": "Category card title."
+  },
+  "catData": {
+    "message": "داده و کلیپ‌بورد",
+    "description": "Category card title."
+  },
+  "catHost": {
+    "message": "داده سایت / دسترسی میزبان",
+    "description": "Category card title."
+  },
+  "catExtHost": {
+    "message": "دسترسی میزبان افزونه",
+    "description": "Category card title for this extension's own host permission."
+  },
+
+  "permCamera": { "message": "دوربین", "description": "Permission row label." },
+  "permCameraDetail": {
+    "message": "استفاده از دوربین برای ضبط ویدیو.",
+    "description": "Permission row description."
+  },
+  "permMicrophone": { "message": "میکروفون", "description": "Permission row label." },
+  "permMicrophoneDetail": {
+    "message": "استفاده از میکروفون برای ضبط صدا.",
+    "description": "Permission row description."
+  },
+  "permGeolocation": { "message": "موقعیت جغرافیایی", "description": "Permission row label." },
+  "permGeolocationDetail": {
+    "message": "خواندن موقعیت مکانی شما.",
+    "description": "Permission row description."
+  },
+  "permNotifications": { "message": "اعلان‌ها", "description": "Permission row label." },
+  "permNotificationsDetail": {
+    "message": "نمایش اعلان‌های دسکتاپ.",
+    "description": "Permission row description."
+  },
+  "permClipboard": { "message": "کلیپ‌بورد", "description": "Permission row label." },
+  "permClipboardDetail": {
+    "message": "استفاده از قابلیت‌های پیشرفته کلیپ‌بورد (خواندن و نوشتن دلخواه).",
+    "description": "Permission row description."
+  },
+  "permCookies": { "message": "کوکی‌ها و داده‌های سایت", "description": "Permission row label." },
+  "permCookiesDetail": {
+    "message": "ذخیره کوکی و سایر داده‌های محلی.",
+    "description": "Permission row description."
+  },
+  "permDownloads": { "message": "دانلودهای خودکار", "description": "Permission row label." },
+  "permDownloadsDetail": {
+    "message": "دانلود چند فایل بدون پرسش در هر بار.",
+    "description": "Permission row description."
+  },
+  "permJavascript": { "message": "جاوااسکریپت", "description": "Permission row label." },
+  "permJavascriptDetail": {
+    "message": "اجرای جاوااسکریپت در این سایت.",
+    "description": "Permission row description."
+  },
+  "permImages": { "message": "تصاویر", "description": "Permission row label." },
+  "permImagesDetail": {
+    "message": "بارگذاری و نمایش تصاویر.",
+    "description": "Permission row description."
+  },
+  "permSound": { "message": "صدا", "description": "Permission row label." },
+  "permSoundDetail": {
+    "message": "پخش صدا بدون قطع شدن.",
+    "description": "Permission row description."
+  },
+  "permPopups": { "message": "پنجره‌های بازشو", "description": "Permission row label." },
+  "permPopupsDetail": {
+    "message": "باز کردن پنجره و برگه‌های جدید مرورگر.",
+    "description": "Permission row description."
+  },
+
+  "hostPermLabel": {
+    "message": "این افزونه در این سایت",
+    "description": "Label of this extension's own host-access row."
+  },
+  "hostPermBroad": {
+    "message": "این افزونه دسترسی گسترده به میزبان دارد (اعلام‌شده در مانیفست).",
+    "description": "Description of a wildcard host grant."
+  },
+  "hostPermGranted": {
+    "message": "این افزونه می‌تواند به این سایت دسترسی داشته باشد (داده‌شده از chrome://extensions).",
+    "description": "Description of a per-site host grant."
+  },
+
+  "statusAllowed": {
+    "message": "مجاز",
+    "description": "Effective value of an 'allow' content setting."
+  },
+  "statusBlocked": {
+    "message": "مسدود",
+    "description": "Effective value of a 'block' content setting."
+  },
+  "statusAsk": {
+    "message": "بر اساس پرسش (پیش‌فرض)",
+    "description": "Effective value of an 'ask' content setting."
+  },
+  "statusSession": {
+    "message": "مجاز (در این نشست)",
+    "description": "Effective value of a 'session_only' content setting."
+  },
+  "statusUnknown": {
+    "message": "نامشخص",
+    "description": "Effective value when the API could not resolve a setting."
+  }
+}

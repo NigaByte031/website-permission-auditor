@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Website Permission Auditor",
-  "short_name": "Permission Auditor",
-  "description": "Audit camera, microphone, location, notifications, clipboard and host access for the site you are viewing.",
+  "name": "__MSG_extName__",
+  "short_name": "__MSG_extShortName__",
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
   "version": "1.1.0",
   "minimum_chrome_version": "104",
   "icons": {
@@ -11,7 +12,7 @@
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_title": "Website Permission Auditor",
+    "default_title": "__MSG_extName__",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
