@@ -1179,6 +1179,162 @@ main {
   gap: 8px;
 }
 
+/* Backup row: export/import the saved custom profiles as JSON. */
+.presets__tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.presets__tool {
+  flex: none;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, transform 0.1s ease;
+}
+
+.presets__tool:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.presets__tool:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.presets__tool:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.presets__tool:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Import/export feedback: takes the rest of the row, truncating long text. */
+.presets__io {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+  color: var(--text-faint);
+}
+
+.presets__io[data-state='ok'] {
+  color: var(--ok);
+}
+
+.presets__io[data-state='error'] {
+  color: var(--deny);
+}
+
+/* Duplicate review: a compact prompt above the profile toolbar. */
+.presets__review {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.presets__review[hidden] {
+  display: none;
+}
+
+.presets__review-text {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.presets__review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Per-profile value breakdown inside the duplicate review. */
+.presets__review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 168px;
+  overflow: auto;
+}
+
+.presets__review-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.presets__review-name {
+  font-size: 10.5px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+/* Two columns: the saved profile beside the incoming one, so the difference
+   between their value sets reads at a glance. */
+.presets__review-diff {
+  display: flex;
+  gap: 8px;
+}
+
+.presets__review-side {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.presets__review-side-title {
+  font-size: 9.5px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-faint);
+}
+
+.presets__review-values {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.presets__review-value {
+  font-size: 10px;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.presets__review-value--reset {
+  color: var(--text-faint);
+  font-style: italic;
+}
+
 .preset {
   display: inline-flex;
   align-items: center;

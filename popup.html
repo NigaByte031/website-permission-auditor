@@ -178,6 +178,99 @@
         <span class="presets__title" data-i18n="presetsTitle">Apply a profile</span>
         <div class="presets__row" id="presetsRow"></div>
 
+        <!-- Profile backup: download the saved custom profiles as JSON, or
+             merge them back from a previously exported file. Wired by
+             popup.js; no network request is involved. -->
+        <div
+          class="presets__tools"
+          role="group"
+          aria-label="Profile backup"
+          data-i18n-aria="presetsToolsLabel"
+        >
+          <button
+            class="presets__tool"
+            id="presetExportBtn"
+            type="button"
+            title="Download your custom profiles as a JSON file"
+            data-i18n="presetsExport"
+            data-i18n-title="presetsExportTitle"
+          >
+            Export
+          </button>
+          <button
+            class="presets__tool"
+            id="presetImportBtn"
+            type="button"
+            title="Add custom profiles from a JSON file"
+            data-i18n="presetsImport"
+            data-i18n-title="presetsImportTitle"
+          >
+            Import
+          </button>
+          <input
+            id="presetImportInput"
+            class="presets__file"
+            type="file"
+            accept="application/json,.json"
+            hidden
+          />
+          <span
+            id="presetIOText"
+            class="presets__io"
+            role="status"
+            aria-live="polite"
+          ></span>
+        </div>
+
+        <!-- Duplicate review: shown when an imported file carries profiles
+             whose label already exists, so the user picks replace / keep both
+             / cancel before anything is written. Wired by popup.js. -->
+        <div
+          class="presets__review"
+          id="presetImportReview"
+          role="region"
+          aria-label="Import review"
+          data-i18n-aria="presetsImportReviewLabel"
+          hidden
+        >
+          <span
+            class="presets__review-text"
+            id="presetImportReviewText"
+            role="status"
+            aria-live="polite"
+          ></span>
+          <!-- Per-profile breakdown of every clashing label: the saved values
+               vs the incoming ones, so the difference is visible before the
+               user picks replace / keep both. Built by popup.js. -->
+          <div class="presets__review-list" id="presetImportReviewList"></div>
+          <div class="presets__review-actions">
+            <button
+              class="presets__tool"
+              id="presetImportReplaceBtn"
+              type="button"
+              data-i18n="presetsImportReplace"
+            >
+              Replace
+            </button>
+            <button
+              class="presets__tool"
+              id="presetImportSkipBtn"
+              type="button"
+              data-i18n="presetsImportSkip"
+            >
+              Keep both
+            </button>
+            <button
+              class="presets__tool"
+              id="presetImportCancelBtn"
+              type="button"
+              data-i18n="presetsImportCancel"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+
         <!-- Confirmation panel: lists the exact rows a preset would change
              before anything is written. Built by popup.js. -->
         <div

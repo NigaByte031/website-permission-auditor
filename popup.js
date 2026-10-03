@@ -806,6 +806,16 @@ const el = {
   resetSiteBtn: document.getElementById('resetSiteBtn'),
   presets: document.getElementById('presets'),
   presetsRow: document.getElementById('presetsRow'),
+  presetExportBtn: document.getElementById('presetExportBtn'),
+  presetImportBtn: document.getElementById('presetImportBtn'),
+  presetImportInput: document.getElementById('presetImportInput'),
+  presetIOText: document.getElementById('presetIOText'),
+  presetImportReview: document.getElementById('presetImportReview'),
+  presetImportReviewText: document.getElementById('presetImportReviewText'),
+  presetImportReviewList: document.getElementById('presetImportReviewList'),
+  presetImportReplaceBtn: document.getElementById('presetImportReplaceBtn'),
+  presetImportSkipBtn: document.getElementById('presetImportSkipBtn'),
+  presetImportCancelBtn: document.getElementById('presetImportCancelBtn'),
   presetPreview: document.getElementById('presetPreview'),
   presetEditor: document.getElementById('presetEditor'),
   presetName: document.getElementById('presetName'),
@@ -1124,6 +1134,12 @@ async function resetSiteToDefaults() {
 
 /** True while a preset batch is being written (guards double-clicks). */
 let presetBusy = false;
+/**
+ * True once a real site has been audited. The profile *buttons* need a site
+ * to apply to, but the editor and the backup controls do not - they stay
+ * usable on chrome:// pages and before the first audit lands.
+ */
+let siteAuditable = false;
 /** The profile currently awaiting confirmation, or null. */
 let pendingPreset = null;
 /** The ops shown in the open preview, applied verbatim on confirm. */
@@ -1149,10 +1165,23 @@ function presetTargetFor(preset, cs) {
 function setPresetsBusy(busy) {
   presetBusy = busy;
   el.presets.classList.toggle('is-busy', busy);
+  refreshPresetButtons();
+}
+
+/**
+ * Recompute every control's disabled state from the two things that can gate
+ * it: a batch in flight, and whether a site is audited to apply to. The
+ * "New preset" button and the backup controls are never gated by the site,
+ * so the profile editor stays usable without an audited tab.
+ */
+function refreshPresetButtons() {
   for (const btn of el.presetsRow.querySelectorAll('.preset')) {
-    btn.disabled = busy;
-    btn.setAttribute('aria-busy', String(busy));
+    const isNew = btn.dataset.preset === '__new__';
+    btn.disabled = presetBusy || (!isNew && !siteAuditable);
+    btn.setAttribute('aria-busy', String(presetBusy));
   }
+  el.presetExportBtn.disabled = presetBusy || customPresets.length === 0;
+  el.presetImportBtn.disabled = presetBusy;
   // Disabling changes which buttons are focusable, so re-pick the tab stop.
   setPresetTabStop(presetTabStop);
 }
@@ -1244,7 +1273,7 @@ function renderPresets() {
   frag.appendChild(addBtn);
 
   el.presetsRow.appendChild(frag);
-  setPresetTabStop(null);
+  refreshPresetButtons();
 }
 
 /** Keep the roving tab stop in sync with wherever focus actually lands. */
@@ -1510,15 +1539,19 @@ async function commitPreset() {
  * panel: focus moves in on open, Escape closes and restores focus.
  */
 
-/** Build the editor's per-permission rows, prefilled from current settings. */
+/**
+ * Build the editor's per-permission rows.
+ *
+ * Every auditable key is listed, whether or not it resolved on the current
+ * page: the editor is independent of the active tab, so a complete profile
+ * can be authored on a chrome:// page or before any audit runs. Rows are
+ * prefilled from the current site's effective setting when there is one.
+ */
 function renderPresetEditorList() {
   el.presetEditorList.replaceChildren();
-  if (!activeSettings) return;
 
   const frag = document.createDocumentFragment();
   for (const cs of CONTENT_SETTING_KEYS) {
-    const entry = activeSettings.get(cs);
-    if (!entry) continue; // this key was not audited on this page
     const spec = specFor(cs);
 
     const li = document.createElement('li');
@@ -1542,13 +1575,17 @@ function renderPresetEditorList() {
     // would produce an invalid write.
     if (REVOCATION_DEFAULT[cs] === 'ask') options.push(['ask', t('optAsk')]);
 
-    const current = entry.setting === 'session_only' ? 'allow' : entry.setting;
     for (const [value, text] of options) {
       const opt = document.createElement('option');
       opt.value = value;
       opt.textContent = text;
       select.appendChild(opt);
     }
+
+    // Prefill from the audited site when there is one; otherwise start on
+    // "Default" so a profile can be authored without any site open.
+    const entry = activeSettings?.get(cs) ?? null;
+    const current = entry?.setting === 'session_only' ? 'allow' : entry?.setting;
     select.value = options.some(([v]) => v === current) ? current : '';
 
     li.append(name, select);
@@ -1559,7 +1596,7 @@ function renderPresetEditorList() {
 
 /** Open the editor, closing any open preview first. */
 function openPresetEditor(trigger) {
-  if (presetBusy || !activeSettings) return;
+  if (presetBusy) return;
   closePresetPreview();
   editorTrigger = trigger ?? document.activeElement;
   setPresetExpanded(trigger);
@@ -1621,6 +1658,308 @@ function deleteCustomPreset(preset) {
   closePresetPreview();
   renderPresets();
   setPresetTabStop(el.presetsRow.querySelector('.preset'), { focus: true });
+}
+
+/* ==========================================================================
+ * Profile backup (export / import JSON)
+ * ==========================================================================
+ * Custom profiles live only in chrome.storage.local, so clearing site data
+ * would silently drop them. Export writes them to a JSON file the user owns;
+ * import merges a file back in. Both use only local browser APIs - a Blob and
+ * a file input - so the extension still makes no network request.
+ */
+
+/** Marker written by export so an imported file can be recognised as ours. */
+const PRESET_EXPORT_TYPE = 'website-permission-auditor/presets';
+const PRESET_EXPORT_VERSION = 1;
+
+/** Show feedback for an import/export attempt (empty text clears it). */
+function showPresetIO(text, state) {
+  el.presetIOText.textContent = text;
+  el.presetIOText.dataset.state = state;
+}
+
+/** Download the saved custom profiles as a JSON file. */
+function exportCustomPresets() {
+  if (!customPresets.length) return;
+
+  const payload = {
+    type: PRESET_EXPORT_TYPE,
+    version: PRESET_EXPORT_VERSION,
+    presets: customPresets.map(({ label, values }) => ({ label, values })),
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: 'application/json',
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'permission-profiles.json';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  // Revoke on the next tick so the download has had a chance to start.
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+/** An import held while the user reviews duplicate labels, or null. */
+let pendingImport = null;
+
+/** Case/space-insensitive key used to compare two profile labels. */
+function presetLabelKey(label) {
+  return String(label ?? '').trim().toLocaleLowerCase();
+}
+
+/** A collision-proof id for a profile that is being added (never overwrites). */
+function freshCustomPresetId() {
+  return `custom:${Date.now().toString(36)}:${Math.random()
+    .toString(36)
+    .slice(2, 8)}`;
+}
+
+/** Append profiles with fresh ids, re-render the toolbar, and focus the last. */
+function appendCustomPresets(list) {
+  for (const preset of list) preset.id = freshCustomPresetId();
+  customPresets.push(...list);
+  saveCustomPresets();
+  renderPresets();
+  // Focus the newest profile so the import is visible and keyboard-reachable.
+  setPresetTabStop(
+    el.presetsRow.querySelector(`.preset[data-preset="${list.at(-1).id}"]`) ??
+      null,
+    { focus: true }
+  );
+  refreshPresetButtons();
+}
+
+/** Report an import outcome, distinguishing pure adds from replacements. */
+function reportPresetImport(added, replaced) {
+  if (replaced > 0 && added > 0) {
+    showPresetIO(t('presetsImportMixed', [num(added), num(replaced)]), 'ok');
+    return;
+  }
+  if (replaced > 0) {
+    showPresetIO(
+      replaced === 1
+        ? t('presetsImportReplacedOne')
+        : t('presetsImportReplacedMany', num(replaced)),
+      'ok'
+    );
+    return;
+  }
+  showPresetIO(
+    added === 1 ? t('presetsImportOne') : t('presetsImportMany', num(added)),
+    'ok'
+  );
+}
+
+/** Hide the duplicate review panel and forget any held import. */
+function clearPresetImportReview() {
+  pendingImport = null;
+  el.presetImportReview.hidden = true;
+  el.presetImportReviewList?.replaceChildren();
+}
+
+/**
+ * Describe one profile as a "key: value" list for the review breakdown, one
+ * entry per named setting. A profile that also resets unnamed keys gets a
+ * trailing marker so the difference is not misread as "only these keys".
+ * @param {Preset} preset
+ * @returns {Array<{text: string, tone: 'set'|'reset'}>}
+ */
+function describePresetValues(preset) {
+  const rows = [];
+  for (const [cs, value] of Object.entries(preset.values ?? {})) {
+    const spec = specFor(cs);
+    const label = SETTING_LABELS[value]?.text ?? value;
+    rows.push({ text: `${spec.label}: ${label}`, tone: 'set' });
+  }
+  if (!rows.length) rows.push({ text: t('presetsImportNoValues'), tone: 'reset' });
+  if (preset.resetOthers) {
+    rows.push({ text: t('presetsImportResetsOthers'), tone: 'reset' });
+  }
+  return rows;
+}
+
+/**
+ * Render the review breakdown: one block per clashing label, with the saved
+ * profile on the left and the incoming one on the right so the differences
+ * between the two value sets are legible before the user decides.
+ * @param {Array<{saved: Preset, incoming: Preset}>} collisions
+ */
+function renderPresetImportReviewList(collisions) {
+  const host = el.presetImportReviewList;
+  if (!host) return;
+  host.replaceChildren();
+
+  const frag = document.createDocumentFragment();
+  for (const { saved, incoming } of collisions) {
+    const block = document.createElement('div');
+    block.className = 'presets__review-entry';
+
+    const name = document.createElement('span');
+    name.className = 'presets__review-name';
+    name.textContent = saved.label;
+    block.appendChild(name);
+
+    const diff = document.createElement('div');
+    diff.className = 'presets__review-diff';
+    diff.append(
+      buildReviewSide(t('presetsImportSavedColumn'), describePresetValues(saved)),
+      buildReviewSide(t('presetsImportIncomingColumn'), describePresetValues(incoming))
+    );
+    block.appendChild(diff);
+
+    frag.appendChild(block);
+  }
+  host.appendChild(frag);
+}
+
+/** Build one side (saved / incoming) of a review diff block. */
+function buildReviewSide(title, rows) {
+  const side = document.createElement('div');
+  side.className = 'presets__review-side';
+
+  const heading = document.createElement('span');
+  heading.className = 'presets__review-side-title';
+  heading.textContent = title;
+  side.appendChild(heading);
+
+  const list = document.createElement('ul');
+  list.className = 'presets__review-values';
+  for (const row of rows) {
+    const li = document.createElement('li');
+    li.className = `presets__review-value presets__review-value--${row.tone}`;
+    li.textContent = row.text;
+    list.appendChild(li);
+  }
+  side.appendChild(list);
+  return side;
+}
+
+/**
+ * Merge custom profiles from parsed JSON. Accepts either a bare array or an
+ * export object ({ presets: [...] }). Profiles whose label already exists are
+ * not written yet: the whole import is held and a review panel asks the user
+ * to replace the matches or keep both. A fresh id is always assigned, so
+ * importing never silently overwrites and hand-edited ids cannot collide.
+ *
+ * @returns {{ok: boolean, count: number, pending?: boolean,
+ *   duplicates?: number, reason?: 'invalid'|'empty'}}
+ */
+function importCustomPresets(data) {
+  const list = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.presets)
+      ? data.presets
+      : null;
+  if (!list) return { ok: false, count: 0, reason: 'invalid' };
+
+  const incoming = list.map(normalizeCustomPreset).filter(Boolean);
+  if (!incoming.length) return { ok: false, count: 0, reason: 'empty' };
+
+  // Split incoming profiles into clashes with a saved label and truly new
+  // ones. Labels already seen inside the file also count as clashes, so two
+  // entries named the same are not both appended unnoticed.
+  const savedByLabel = new Map(
+    customPresets.map((p) => [presetLabelKey(p.label), p])
+  );
+  const seenLabels = new Set(savedByLabel.keys());
+  const fresh = [];
+  const duplicates = [];
+  // Each clash keeps both sides so the review can show the value differences.
+  const collisions = [];
+  for (const preset of incoming) {
+    const key = presetLabelKey(preset.label);
+    if (seenLabels.has(key)) {
+      duplicates.push(preset);
+      collisions.push({ saved: savedByLabel.get(key) ?? preset, incoming: preset });
+    } else {
+      fresh.push(preset);
+      seenLabels.add(key);
+    }
+  }
+
+  if (!duplicates.length) {
+    appendCustomPresets(incoming);
+    return { ok: true, count: incoming.length };
+  }
+
+  // Hold the import; nothing is written until the user chooses.
+  clearPresetImportReview();
+  pendingImport = { incoming, fresh, duplicates };
+  el.presetImportReviewText.textContent =
+    duplicates.length === 1
+      ? t('presetsImportDuplicatesOne')
+      : t('presetsImportDuplicatesMany', num(duplicates.length));
+  renderPresetImportReviewList(collisions);
+  el.presetImportReview.hidden = false;
+  el.presetImportReplaceBtn.focus?.();
+  return { ok: true, count: incoming.length, pending: true, duplicates: duplicates.length };
+}
+
+/**
+ * Apply the held import. `replace` overwrites the matching saved profiles in
+ * place (keeping their id and toolbar position); otherwise every imported
+ * profile is appended alongside the existing one.
+ */
+function resolvePresetImport(replace) {
+  if (!pendingImport) return;
+  const { incoming, fresh, duplicates } = pendingImport;
+  clearPresetImportReview();
+
+  if (replace) {
+    const byLabel = new Map(
+      duplicates.map((p) => [presetLabelKey(p.label), p])
+    );
+    customPresets = customPresets.map((saved) => {
+      const match = byLabel.get(presetLabelKey(saved.label));
+      return match ? { ...match, id: saved.id } : saved;
+    });
+    if (fresh.length) appendCustomPresets(fresh);
+    else {
+      saveCustomPresets();
+      renderPresets();
+      refreshPresetButtons();
+      setPresetTabStop(el.presetsRow.querySelector('.preset'), { focus: false });
+    }
+    reportPresetImport(fresh.length, duplicates.length);
+    return;
+  }
+
+  appendCustomPresets(incoming);
+  reportPresetImport(incoming.length, 0);
+}
+
+/** Read the chosen file and merge its profiles (never throws). */
+async function handlePresetImportFile(file) {
+  if (!file) return;
+
+  let data;
+  try {
+    data = JSON.parse(await file.text());
+  } catch {
+    clearPresetImportReview();
+    showPresetIO(t('presetsImportInvalid'), 'error');
+    return;
+  }
+
+  const result = importCustomPresets(data);
+  if (!result.ok) {
+    clearPresetImportReview();
+    showPresetIO(
+      t(result.reason === 'empty' ? 'presetsImportNone' : 'presetsImportInvalid'),
+      'error'
+    );
+    return;
+  }
+  // A held import shows its own review panel instead of a status line.
+  if (result.pending) {
+    showPresetIO('', '');
+    return;
+  }
+  reportPresetImport(result.count, 0);
 }
 
 /** Editor keyboard: Escape closes, Enter in the name field saves. */
@@ -1873,6 +2212,11 @@ async function runAudit() {
     showInitial(el.siteName.textContent);
     el.skeleton.hidden = true;
     el.notAuditable.hidden = false;
+    // No site to apply a profile to, but the editor and its backup controls
+    // stay available so profiles can still be authored, imported or exported.
+    siteAuditable = false;
+    el.presets.hidden = false;
+    refreshPresetButtons();
     return;
   }
 
@@ -1972,7 +2316,10 @@ async function runAudit() {
   //     every row).
   const hasCards = el.categories.querySelector('.card') !== null;
   el.searchBar.hidden = !hasCards;
-  el.presets.hidden = !hasCards;
+  // The profile card stays visible even for a site with no rows: its editor
+  // and backup controls are independent of the audited tab.
+  siteAuditable = true;
+  el.presets.hidden = false;
   el.actionsBar.hidden = !hasCards;
   el.resetSiteBtn.disabled = !canResetSite();
   setPresetsBusy(false);
@@ -2030,11 +2377,38 @@ el.presetsRow.addEventListener('focusin', onPresetsRowFocusIn);
 el.presetPreview.addEventListener('keydown', onPresetPreviewKeydown);
 
 /* Custom preset editor: save/cancel, Escape to dismiss, Enter to save. */
-el.presetEditor.addEventListener('keydown', onPresetEditorKeydown);
-el.presetSaveBtn.addEventListener('click', savePresetFromEditor);
-el.presetCancelBtn.addEventListener('click', () =>
-  closePresetEditor({ restoreFocus: true })
+el.presetEditor.addEventListener('keydown', onPresetEditorKeydown);  el.presetSaveBtn.addEventListener('click', savePresetFromEditor);
+  el.presetCancelBtn.addEventListener('click', () =>
+    closePresetEditor({ restoreFocus: true })
+  );
+
+/* Profile backup: download the saved profiles, or merge them back in. */
+el.presetExportBtn.addEventListener('click', () => {
+  showPresetIO('', '');
+  exportCustomPresets();
+});
+el.presetImportBtn.addEventListener('click', () => {
+  // A new pick supersedes any previous review that was left open.
+  clearPresetImportReview();
+  showPresetIO('', '');
+  el.presetImportInput.click();
+});
+el.presetImportInput.addEventListener('change', async () => {
+  const [file] = el.presetImportInput.files ?? [];
+  // Reset first so picking the same file again still fires `change`.
+  el.presetImportInput.value = '';
+  await handlePresetImportFile(file);
+});
+
+/* Duplicate review: replace the matches, keep both, or abandon the import. */
+el.presetImportReplaceBtn.addEventListener('click', () =>
+  resolvePresetImport(true)
 );
+el.presetImportSkipBtn.addEventListener('click', () => resolvePresetImport(false));
+el.presetImportCancelBtn.addEventListener('click', () => {
+  clearPresetImportReview();
+  showPresetIO('', '');
+});
 
 /* Footer link: open Chrome's site settings in a new tab. */
 el.settingsLink.addEventListener('click', (e) => {

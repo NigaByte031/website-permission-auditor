@@ -137,7 +137,7 @@
     "description": "Button that opens the custom preset editor."
   },
   "newPresetTitle": {
-    "message": "Create a custom preset from this site’s permissions",
+    "message": "Create a custom profile of your own",
     "description": "Tooltip of the 'New preset' button."
   },
   "customPresetDefault": {
@@ -147,6 +147,95 @@
   "customPresetHint": {
     "message": "Custom preset: $1",
     "description": "Tooltip of a custom preset button; $1 is its name."
+  },
+
+  "presetsToolsLabel": {
+    "message": "Profile backup",
+    "description": "Accessible name of the export/import profile controls."
+  },
+  "presetsExport": {
+    "message": "Export",
+    "description": "Button that downloads the custom profiles as JSON."
+  },
+  "presetsExportTitle": {
+    "message": "Download your custom profiles as a JSON file",
+    "description": "Tooltip of the export button."
+  },
+  "presetsImport": {
+    "message": "Import",
+    "description": "Button that loads custom profiles from a JSON file."
+  },
+  "presetsImportTitle": {
+    "message": "Add custom profiles from a JSON file",
+    "description": "Tooltip of the import button."
+  },
+  "presetsImportOne": {
+    "message": "Imported 1 profile",
+    "description": "Status after importing a file with exactly one profile."
+  },
+  "presetsImportMany": {
+    "message": "Imported $1 profiles",
+    "description": "Status after importing several profiles; $1 is the count."
+  },
+  "presetsImportNone": {
+    "message": "That file contains no profiles",
+    "description": "Status when an imported file has no usable profiles."
+  },
+  "presetsImportInvalid": {
+    "message": "That file is not a profile export",
+    "description": "Status when an imported file is not valid JSON or has the wrong shape."
+  },
+  "presetsImportDuplicatesOne": {
+    "message": "One of these profiles already exists",
+    "description": "Import review prompt when a single imported profile matches a saved one."
+  },
+  "presetsImportDuplicatesMany": {
+    "message": "$1 of these profiles already exist",
+    "description": "Import review prompt when several imported profiles match saved ones; $1 is the count."
+  },
+  "presetsImportReviewLabel": {
+    "message": "Import review",
+    "description": "Accessible name of the duplicate-profile review panel."
+  },
+  "presetsImportReplace": {
+    "message": "Replace",
+    "description": "Review action that overwrites the matching saved profiles."
+  },
+  "presetsImportSkip": {
+    "message": "Keep both",
+    "description": "Review action that adds the imported profiles alongside the matching saved ones."
+  },
+  "presetsImportCancel": {
+    "message": "Cancel",
+    "description": "Review action that abandons a pending import."
+  },
+  "presetsImportReplacedOne": {
+    "message": "Replaced 1 profile",
+    "description": "Status after an import replaced exactly one saved profile."
+  },
+  "presetsImportReplacedMany": {
+    "message": "Replaced $1 profiles",
+    "description": "Status after an import replaced several saved profiles; $1 is the count."
+  },
+  "presetsImportMixed": {
+    "message": "Added $1, replaced $2",
+    "description": "Status after an import both added and replaced profiles; $1 is added, $2 is replaced."
+  },
+  "presetsImportSavedColumn": {
+    "message": "Saved",
+    "description": "Heading over the saved profile's values in the import review."
+  },
+  "presetsImportIncomingColumn": {
+    "message": "Incoming",
+    "description": "Heading over the imported profile's values in the import review."
+  },
+  "presetsImportNoValues": {
+    "message": "No set permissions",
+    "description": "Shown for a profile that names no permission overrides."
+  },
+  "presetsImportResetsOthers": {
+    "message": "Resets other permissions",
+    "description": "Marker for a profile that sends unnamed permissions back to default."
   },
 
   "presetLockdown": {

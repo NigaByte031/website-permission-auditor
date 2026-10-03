@@ -137,7 +137,7 @@
     "description": "Button that opens the custom preset editor."
   },
   "newPresetTitle": {
-    "message": "ساخت قالب سفارشی از مجوزهای این سایت",
+    "message": "ساخت یک پروفایل سفارشی مستقل",
     "description": "Tooltip of the 'New preset' button."
   },
   "customPresetDefault": {
@@ -147,6 +147,95 @@
   "customPresetHint": {
     "message": "قالب سفارشی: $1",
     "description": "Tooltip of a custom preset button; $1 is its name."
+  },
+
+  "presetsToolsLabel": {
+    "message": "پشتیبان‌گیری پروفایل‌ها",
+    "description": "Accessible name of the export/import profile controls."
+  },
+  "presetsExport": {
+    "message": "خروجی",
+    "description": "Button that downloads the custom profiles as JSON."
+  },
+  "presetsExportTitle": {
+    "message": "پروفایل‌های سفارشی را به‌صورت فایل JSON دانلود کن",
+    "description": "Tooltip of the export button."
+  },
+  "presetsImport": {
+    "message": "ورودی",
+    "description": "Button that loads custom profiles from a JSON file."
+  },
+  "presetsImportTitle": {
+    "message": "افزودن پروفایل‌های سفارشی از یک فایل JSON",
+    "description": "Tooltip of the import button."
+  },
+  "presetsImportOne": {
+    "message": "۱ پروفایل وارد شد",
+    "description": "Status after importing a file with exactly one profile."
+  },
+  "presetsImportMany": {
+    "message": "$1 پروفایل وارد شد",
+    "description": "Status after importing several profiles; $1 is the count."
+  },
+  "presetsImportNone": {
+    "message": "آن فایل هیچ پروفایلی ندارد",
+    "description": "Status when an imported file has no usable profiles."
+  },
+  "presetsImportInvalid": {
+    "message": "آن فایل یک خروجی پروفایل معتبر نیست",
+    "description": "Status when an imported file is not valid JSON or has the wrong shape."
+  },
+  "presetsImportDuplicatesOne": {
+    "message": "یکی از این پروفایل‌ها از قبل وجود دارد",
+    "description": "Import review prompt when a single imported profile matches a saved one."
+  },
+  "presetsImportDuplicatesMany": {
+    "message": "$1 از این پروفایل‌ها از قبل وجود دارند",
+    "description": "Import review prompt when several imported profiles match saved ones; $1 is the count."
+  },
+  "presetsImportReviewLabel": {
+    "message": "بازبینی ورودی",
+    "description": "Accessible name of the duplicate-profile review panel."
+  },
+  "presetsImportReplace": {
+    "message": "جایگزینی",
+    "description": "Review action that overwrites the matching saved profiles."
+  },
+  "presetsImportSkip": {
+    "message": "هر دو را نگه دار",
+    "description": "Review action that adds the imported profiles alongside the matching saved ones."
+  },
+  "presetsImportCancel": {
+    "message": "لغو",
+    "description": "Review action that abandons a pending import."
+  },
+  "presetsImportReplacedOne": {
+    "message": "۱ پروفایل جایگزین شد",
+    "description": "Status after an import replaced exactly one saved profile."
+  },
+  "presetsImportReplacedMany": {
+    "message": "$1 پروفایل جایگزین شد",
+    "description": "Status after an import replaced several saved profiles; $1 is the count."
+  },
+  "presetsImportMixed": {
+    "message": "$1 افزوده شد، $2 جایگزین شد",
+    "description": "Status after an import both added and replaced profiles; $1 is added, $2 is replaced."
+  },
+  "presetsImportSavedColumn": {
+    "message": "ذخیره‌شده",
+    "description": "Heading over the saved profile's values in the import review."
+  },
+  "presetsImportIncomingColumn": {
+    "message": "ورودی",
+    "description": "Heading over the imported profile's values in the import review."
+  },
+  "presetsImportNoValues": {
+    "message": "مجوز تعیین‌شده‌ای ندارد",
+    "description": "Shown for a profile that names no permission overrides."
+  },
+  "presetsImportResetsOthers": {
+    "message": "سایر مجوزها را بازنشانی می‌کند",
+    "description": "Marker for a profile that sends unnamed permissions back to default."
   },
 
   "presetLockdown": {

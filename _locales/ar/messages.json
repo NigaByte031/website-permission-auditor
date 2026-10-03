@@ -137,7 +137,7 @@
     "description": "Button that opens the custom preset editor."
   },
   "newPresetTitle": {
-    "message": "إنشاء إعداد مسبق مخصص من أذونات هذا الموقع",
+    "message": "إنشاء ملف تعريفي مخصص خاص بك",
     "description": "Tooltip of the 'New preset' button."
   },
   "customPresetDefault": {
@@ -147,6 +147,95 @@
   "customPresetHint": {
     "message": "إعداد مسبق مخصص: $1",
     "description": "Tooltip of a custom preset button; $1 is its name."
+  },
+
+  "presetsToolsLabel": {
+    "message": "نسخ احتياطي للملفات التعريفية",
+    "description": "Accessible name of the export/import profile controls."
+  },
+  "presetsExport": {
+    "message": "تصدير",
+    "description": "Button that downloads the custom profiles as JSON."
+  },
+  "presetsExportTitle": {
+    "message": "تنزيل ملفاتك التعريفية المخصصة كملف JSON",
+    "description": "Tooltip of the export button."
+  },
+  "presetsImport": {
+    "message": "استيراد",
+    "description": "Button that loads custom profiles from a JSON file."
+  },
+  "presetsImportTitle": {
+    "message": "إضافة ملفات تعريفية مخصصة من ملف JSON",
+    "description": "Tooltip of the import button."
+  },
+  "presetsImportOne": {
+    "message": "تم استيراد ملف تعريفي واحد",
+    "description": "Status after importing a file with exactly one profile."
+  },
+  "presetsImportMany": {
+    "message": "تم استيراد $1 ملفات تعريفية",
+    "description": "Status after importing several profiles; $1 is the count."
+  },
+  "presetsImportNone": {
+    "message": "لا يحتوي ذلك الملف على أي ملفات تعريفية",
+    "description": "Status when an imported file has no usable profiles."
+  },
+  "presetsImportInvalid": {
+    "message": "هذا الملف ليس تصديرًا لملفات تعريفية",
+    "description": "Status when an imported file is not valid JSON or has the wrong shape."
+  },
+  "presetsImportDuplicatesOne": {
+    "message": "يوجد أحد هذه الملفات التعريفية بالفعل",
+    "description": "Import review prompt when a single imported profile matches a saved one."
+  },
+  "presetsImportDuplicatesMany": {
+    "message": "يوجد $1 من هذه الملفات التعريفية بالفعل",
+    "description": "Import review prompt when several imported profiles match saved ones; $1 is the count."
+  },
+  "presetsImportReviewLabel": {
+    "message": "مراجعة الاستيراد",
+    "description": "Accessible name of the duplicate-profile review panel."
+  },
+  "presetsImportReplace": {
+    "message": "استبدال",
+    "description": "Review action that overwrites the matching saved profiles."
+  },
+  "presetsImportSkip": {
+    "message": "الإبقاء على الاثنين",
+    "description": "Review action that adds the imported profiles alongside the matching saved ones."
+  },
+  "presetsImportCancel": {
+    "message": "إلغاء",
+    "description": "Review action that abandons a pending import."
+  },
+  "presetsImportReplacedOne": {
+    "message": "تم استبدال ملف تعريفي واحد",
+    "description": "Status after an import replaced exactly one saved profile."
+  },
+  "presetsImportReplacedMany": {
+    "message": "تم استبدال $1 ملفات تعريفية",
+    "description": "Status after an import replaced several saved profiles; $1 is the count."
+  },
+  "presetsImportMixed": {
+    "message": "تمت إضافة $1 واستبدال $2",
+    "description": "Status after an import both added and replaced profiles; $1 is added, $2 is replaced."
+  },
+  "presetsImportSavedColumn": {
+    "message": "المحفوظ",
+    "description": "Heading over the saved profile's values in the import review."
+  },
+  "presetsImportIncomingColumn": {
+    "message": "الوارد",
+    "description": "Heading over the imported profile's values in the import review."
+  },
+  "presetsImportNoValues": {
+    "message": "لا توجد أذونات محددة",
+    "description": "Shown for a profile that names no permission overrides."
+  },
+  "presetsImportResetsOthers": {
+    "message": "يعيد ضبط الأذونات الأخرى",
+    "description": "Marker for a profile that sends unnamed permissions back to default."
   },
 
   "presetLockdown": {
