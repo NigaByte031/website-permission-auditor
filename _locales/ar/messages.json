@@ -237,6 +237,14 @@
     "message": "يعيد ضبط الأذونات الأخرى",
     "description": "Marker for a profile that sends unnamed permissions back to default."
   },
+  "presetsImportUnset": {
+    "message": "غير محدد",
+    "description": "Value shown for a permission neither profile names."
+  },
+  "presetsImportDiffers": {
+    "message": "$1 اختلاف",
+    "description": "Badge counting the values that differ between the two profiles; $1 is the count."
+  },
 
   "presetLockdown": {
     "message": "إغلاق كامل",

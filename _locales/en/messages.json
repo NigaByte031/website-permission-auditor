@@ -237,6 +237,14 @@
     "message": "Resets other permissions",
     "description": "Marker for a profile that sends unnamed permissions back to default."
   },
+  "presetsImportUnset": {
+    "message": "Not set",
+    "description": "Value shown for a permission neither profile names."
+  },
+  "presetsImportDiffers": {
+    "message": "$1 differ",
+    "description": "Badge counting the values that differ between the two profiles; $1 is the count."
+  },
 
   "presetLockdown": {
     "message": "Lock down",

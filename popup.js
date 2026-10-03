@@ -1761,31 +1761,72 @@ function clearPresetImportReview() {
   el.presetImportReviewList?.replaceChildren();
 }
 
+/** Human label for a target value, falling back to "not set" for none. */
+function presetValueText(value) {
+  if (value === undefined) return t('presetsImportUnset');
+  return SETTING_LABELS[value]?.text ?? value;
+}
+
 /**
- * Describe one profile as a "key: value" list for the review breakdown, one
- * entry per named setting. A profile that also resets unnamed keys gets a
- * trailing marker so the difference is not misread as "only these keys".
- * @param {Preset} preset
- * @returns {Array<{text: string, tone: 'set'|'reset'}>}
+ * Compare a saved profile against an incoming one, row by row. Every key
+ * either profile names is listed so a value present on only one side is not
+ * missed, and each row carries `changed` so the two columns can highlight the
+ * values that actually differ. A profile that resets unnamed keys contributes
+ * a trailing marker row, itself flagged when only one side resets.
+ *
+ * @param {Preset} saved
+ * @param {Preset} incoming
+ * @returns {Array<{savedText: string, incomingText: string, tone: 'set'|'reset',
+ *   changed: boolean}>}
  */
-function describePresetValues(preset) {
+function buildPresetDiff(saved, incoming) {
+  const keys = new Set([
+    ...Object.keys(saved.values ?? {}),
+    ...Object.keys(incoming.values ?? {}),
+  ]);
+
   const rows = [];
-  for (const [cs, value] of Object.entries(preset.values ?? {})) {
+  for (const cs of keys) {
     const spec = specFor(cs);
-    const label = SETTING_LABELS[value]?.text ?? value;
-    rows.push({ text: `${spec.label}: ${label}`, tone: 'set' });
+    const savedVal = presetTargetFor(saved, cs);
+    const incomingVal = presetTargetFor(incoming, cs);
+    rows.push({
+      savedText: `${spec.label}: ${presetValueText(savedVal)}`,
+      incomingText: `${spec.label}: ${presetValueText(incomingVal)}`,
+      tone: 'set',
+      changed: savedVal !== incomingVal,
+    });
   }
-  if (!rows.length) rows.push({ text: t('presetsImportNoValues'), tone: 'reset' });
-  if (preset.resetOthers) {
-    rows.push({ text: t('presetsImportResetsOthers'), tone: 'reset' });
+
+  if (saved.resetOthers || incoming.resetOthers) {
+    const marker = t('presetsImportResetsOthers');
+    rows.push({
+      savedText: marker,
+      incomingText: marker,
+      tone: 'reset',
+      changed: Boolean(saved.resetOthers) !== Boolean(incoming.resetOthers),
+    });
   }
+
+  // Nothing named on either side: show one neutral row instead of a blank.
+  if (!rows.length) {
+    const empty = t('presetsImportNoValues');
+    rows.push({
+      savedText: empty,
+      incomingText: empty,
+      tone: 'reset',
+      changed: false,
+    });
+  }
+
   return rows;
 }
 
 /**
  * Render the review breakdown: one block per clashing label, with the saved
- * profile on the left and the incoming one on the right so the differences
- * between the two value sets are legible before the user decides.
+ * profile on the left and the incoming one on the right. Rows whose values
+ * differ are highlighted so the differences read at a glance, and each block
+ * carries a count of how many values differ.
  * @param {Array<{saved: Preset, incoming: Preset}>} collisions
  */
 function renderPresetImportReviewList(collisions) {
@@ -1798,16 +1839,32 @@ function renderPresetImportReviewList(collisions) {
     const block = document.createElement('div');
     block.className = 'presets__review-entry';
 
+    const rows = buildPresetDiff(saved, incoming);
+    const changedCount = rows.filter((row) => row.changed).length;
+
+    const head = document.createElement('div');
+    head.className = 'presets__review-name-row';
+
     const name = document.createElement('span');
     name.className = 'presets__review-name';
     name.textContent = saved.label;
-    block.appendChild(name);
+    head.appendChild(name);
+
+    // A quick count makes "how different are these?" answerable without
+    // scanning both columns.
+    if (changedCount) {
+      const badge = document.createElement('span');
+      badge.className = 'presets__review-diff-count';
+      badge.textContent = t('presetsImportDiffers', num(changedCount));
+      head.appendChild(badge);
+    }
+    block.appendChild(head);
 
     const diff = document.createElement('div');
     diff.className = 'presets__review-diff';
     diff.append(
-      buildReviewSide(t('presetsImportSavedColumn'), describePresetValues(saved)),
-      buildReviewSide(t('presetsImportIncomingColumn'), describePresetValues(incoming))
+      buildReviewSide(t('presetsImportSavedColumn'), rows, 'saved'),
+      buildReviewSide(t('presetsImportIncomingColumn'), rows, 'incoming')
     );
     block.appendChild(diff);
 
@@ -1817,25 +1874,27 @@ function renderPresetImportReviewList(collisions) {
 }
 
 /** Build one side (saved / incoming) of a review diff block. */
-function buildReviewSide(title, rows) {
-  const side = document.createElement('div');
-  side.className = 'presets__review-side';
+function buildReviewSide(title, rows, side) {
+  const container = document.createElement('div');
+  container.className = 'presets__review-side';
 
   const heading = document.createElement('span');
   heading.className = 'presets__review-side-title';
   heading.textContent = title;
-  side.appendChild(heading);
+  container.appendChild(heading);
 
   const list = document.createElement('ul');
   list.className = 'presets__review-values';
   for (const row of rows) {
     const li = document.createElement('li');
-    li.className = `presets__review-value presets__review-value--${row.tone}`;
-    li.textContent = row.text;
+    li.className =
+      `presets__review-value presets__review-value--${row.tone}` +
+      (row.changed ? ' is-changed' : '');
+    li.textContent = side === 'saved' ? row.savedText : row.incomingText;
     list.appendChild(li);
   }
-  side.appendChild(list);
-  return side;
+  container.appendChild(list);
+  return container;
 }
 
 /**
